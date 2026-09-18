@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Surtio usa tu ubicación para mostrarte las gasolineras y precios cercanos.</string>
 </dict>
 </plist>
