@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
-import '../../../core/map/map_config.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/location/location_service.dart';
+import '../../../core/map/map_config.dart';
+import '../data/models/fuel_station.dart';
+import '../data/services/fuel_station_api.dart';
+import '../domain/services/station_distance_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -159,9 +162,46 @@ class _MapPlaceholder extends StatefulWidget {
 
 class _MapPlaceholderState extends State<_MapPlaceholder> {
   final _locationService = const LocationService();
+  final _fuelStationApi = const FuelStationApi();
+  final _stationDistanceService = const StationDistanceService();
 
   MapLibreMapController? _mapController;
   bool _locating = false;
+
+  Future<void> _loadFuelStations({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final stations = await _fuelStationApi.fetchStations();
+
+      final nearbyStations = _stationDistanceService.nearbyStations(
+        stations: stations,
+        latitude: latitude,
+        longitude: longitude,
+        radiusKm: 20,
+      );
+
+      await _showStationsOnMap(nearbyStations);
+
+      debugPrint('⛽ Surtio: ${stations.length} estaciones nacionales');
+
+      debugPrint(
+        '📍 Surtio: ${nearbyStations.length} estaciones a menos de 20 km',
+      );
+
+      for (final station in nearbyStations.take(5)) {
+        debugPrint(
+          '⛽ ${station.name} | '
+          '${station.municipality} | '
+          '${station.gasoline95Price ?? '-'} €/L',
+        );
+      }
+    } catch (error, stackTrace) {
+      debugPrint('❌ Surtio: error cargando estaciones: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
 
   Future<void> _goToCurrentLocation() async {
     if (_locating) return;
@@ -170,6 +210,11 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
     try {
       final position = await _locationService.getCurrentPosition();
+
+      await _loadFuelStations(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
 
       await _mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
@@ -190,6 +235,47 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         setState(() => _locating = false);
       }
     }
+  }
+
+  Future<void> _showStationsOnMap(List<FuelStation> stations) async {
+    final controller = _mapController;
+    if (controller == null) return;
+
+    const sourceId = 'fuel-stations';
+    const layerId = 'fuel-stations-circles';
+
+    final features = stations.map((station) {
+      return {
+        'type': 'Feature',
+        'properties': {
+          'id': station.id,
+          'name': station.name,
+          'price': station.gasoline95Price,
+        },
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [station.longitude, station.latitude],
+        },
+      };
+    }).toList();
+
+    await controller.addGeoJsonSource(sourceId, {
+      'type': 'FeatureCollection',
+      'features': features,
+    });
+
+    await controller.addCircleLayer(
+      sourceId,
+      layerId,
+      const CircleLayerProperties(
+        circleRadius: 7,
+        circleColor: '#35E6A1',
+        circleStrokeColor: '#07110F',
+        circleStrokeWidth: 2,
+      ),
+    );
+
+    debugPrint('🗺️ Surtio: ${stations.length} estaciones pintadas en el mapa');
   }
 
   @override
@@ -216,28 +302,15 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
               ),
               compassEnabled: false,
               rotateGesturesEnabled: false,
+              myLocationEnabled: true,
+              myLocationTrackingMode: MyLocationTrackingMode.none,
               onMapCreated: (controller) {
                 _mapController = controller;
               },
+              onStyleLoadedCallback: () {
+                debugPrint('🗺️ Surtio: estilo del mapa cargado');
+              },
             ),
-          ),
-
-          const Positioned(
-            top: 95,
-            left: 45,
-            child: _PriceMarker(price: '1,429'),
-          ),
-
-          const Positioned(
-            top: 180,
-            right: 55,
-            child: _PriceMarker(price: '1,389', best: true),
-          ),
-
-          const Positioned(
-            top: 275,
-            left: 120,
-            child: _PriceMarker(price: '1,409'),
           ),
 
           Positioned(
@@ -272,40 +345,6 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PriceMarker extends StatelessWidget {
-  const _PriceMarker({required this.price, this.best = false});
-
-  final String price;
-  final bool best;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: best ? AppColors.primary : AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: best ? AppColors.primary : AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Text(
-        '$price €',
-        style: TextStyle(
-          color: best ? AppColors.background : AppColors.textPrimary,
-          fontWeight: FontWeight.w800,
-          fontSize: 14,
-        ),
       ),
     );
   }
