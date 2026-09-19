@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const background = Color(0xFF07110F);
-  static const surface = Color(0xFF0D1A17);
-  static const surfaceElevated = Color(0xFF13231F);
+  // Fondos
+  static const background = Color(0xFF03141D);
+  static const backgroundDeep = Color(0xFF021018);
 
-  static const primary = Color(0xFF35E6A1);
-  static const primaryStrong = Color(0xFF19C985);
-  static const secondary = Color(0xFF2FD6C4);
+  // Superficies / tarjetas
+  static const surface = Color(0xFF0A1D27);
+  static const surfaceElevated = Color(0xFF102630);
+  static const surfaceSoft = Color(0xFF142B35);
 
-  static const textPrimary = Color(0xFFF4FBF8);
-  static const textSecondary = Color(0xFF91A69F);
-  static const textMuted = Color(0xFF61736D);
+  // Surtio
+  static const primary = Color(0xFF32F5A6);
+  static const primaryStrong = Color(0xFF19E895);
+  static const secondary = Color(0xFF20DCC4);
 
-  static const border = Color(0xFF1D302B);
+  // Texto
+  static const textPrimary = Color(0xFFF6FAFC);
+  static const textSecondary = Color(0xFFA7BAC3);
+  static const textMuted = Color(0xFF718791);
 
-  static const success = Color(0xFF35E6A1);
-  static const warning = Color(0xFFFFC857);
-  static const danger = Color(0xFFFF6B6B);
+  // Bordes
+  static const border = Color(0xFF203B47);
+  static const borderStrong = Color(0xFF2A5362);
+
+  // Estados
+  static const warning = Color(0xFFFFE600);
+  static const danger = Color(0xFFFF5C67);
+
+  // Elementos sobre mapa
+  static const mapMarker = Color(0xFF0B1B24);
+  static const mapMarkerSelected = primary;
 }
