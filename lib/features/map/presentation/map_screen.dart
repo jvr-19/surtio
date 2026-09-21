@@ -54,6 +54,13 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   FuelStation? _selectedStation;
   double? _selectedStationDistanceKm;
 
+  FuelType _selectedFuel = FuelType.gasoline95;
+
+  List<FuelStation> _nearbyStations = [];
+
+  double? _currentLatitude;
+  double? _currentLongitude;
+
   Future<void> _initializeMap() async {
     if (_initialLoadDone || !_mapReady) return;
 
@@ -92,9 +99,10 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     required List<FuelStation> stations,
     required double latitude,
     required double longitude,
+    required FuelType fuelType,
   }) {
     final stationsWithPrice = stations
-        .where((station) => station.gasoline95Price != null)
+        .where((station) => station.priceFor(fuelType) != null)
         .toList();
 
     if (stationsWithPrice.isEmpty) {
@@ -108,7 +116,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     }
 
     stationsWithPrice.sort(
-      (a, b) => a.gasoline95Price!.compareTo(b.gasoline95Price!),
+      (a, b) => a.priceFor(fuelType)!.compareTo(b.priceFor(fuelType)!),
     );
 
     final selected = stationsWithPrice.first;
@@ -128,6 +136,30 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     });
   }
 
+  Future<void> _changeFuel(FuelType fuelType) async {
+    if (_selectedFuel == fuelType) return;
+
+    setState(() {
+      _selectedFuel = fuelType;
+    });
+
+    final latitude = _currentLatitude;
+    final longitude = _currentLongitude;
+
+    if (latitude == null || longitude == null || _nearbyStations.isEmpty) {
+      return;
+    }
+
+    _selectLowestPriceStation(
+      stations: _nearbyStations,
+      latitude: latitude,
+      longitude: longitude,
+      fuelType: fuelType,
+    );
+
+    await _showStationsOnMap(_nearbyStations, fuelType: fuelType);
+  }
+
   Future<void> _loadFuelStations({
     required double latitude,
     required double longitude,
@@ -142,14 +174,23 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         radiusKm: 20,
       );
 
+      if (!mounted) return;
+
+      setState(() {
+        _nearbyStations = nearbyStations;
+        _currentLatitude = latitude;
+        _currentLongitude = longitude;
+      });
+
       _selectLowestPriceStation(
         stations: nearbyStations,
         latitude: latitude,
         longitude: longitude,
+        fuelType: _selectedFuel,
       );
 
       try {
-        await _showStationsOnMap(nearbyStations);
+        await _showStationsOnMap(nearbyStations, fuelType: _selectedFuel);
       } catch (error, stackTrace) {
         debugPrint('❌ ERROR MAPLIBRE: $error');
         debugPrintStack(stackTrace: stackTrace);
@@ -204,7 +245,8 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   }
 
   Future<Uint8List> _createStationMarkerImage(
-    String priceLabel, {
+    String priceLabel,
+    String fuelLabel, {
     bool recommended = false,
   }) async {
     const width = 164.0;
@@ -259,7 +301,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
     final fuelPainter = TextPainter(
       text: TextSpan(
-        text: '95',
+        text: fuelLabel,
         style: TextStyle(
           color: const Color(0xFF081923),
           fontSize: 18,
@@ -311,16 +353,20 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   Future<String?> _ensureMarkerImage(
     MapLibreMapController controller,
     double? price,
+    FuelType fuelType,
   ) async {
     if (price == null) return null;
 
     final priceLabel = price.toStringAsFixed(3).replaceAll('.', ',');
 
     final markerId =
-        'surtio-marker-${price.toStringAsFixed(3).replaceAll('.', '-')}';
+        'surtio-marker-${fuelType.name}-${price.toStringAsFixed(3).replaceAll('.', '-')}';
 
     if (!_registeredMarkerImages.contains(markerId)) {
-      final markerImage = await _createStationMarkerImage(priceLabel);
+      final markerImage = await _createStationMarkerImage(
+        priceLabel,
+        fuelType.markerLabel,
+      );
 
       await controller.addImage(markerId, markerImage);
 
@@ -330,7 +376,10 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     return markerId;
   }
 
-  Future<void> _showStationsOnMap(List<FuelStation> stations) async {
+  Future<void> _showStationsOnMap(
+    List<FuelStation> stations, {
+    required FuelType fuelType,
+  }) async {
     final controller = _mapController;
 
     if (controller == null || stations.isEmpty) {
@@ -343,13 +392,13 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     final features = <Map<String, dynamic>>[];
 
     for (final station in stations) {
-      final price = station.gasoline95Price;
+      final price = station.priceFor(fuelType);
 
       if (price == null) {
         continue;
       }
 
-      final markerImage = await _ensureMarkerImage(controller, price);
+      final markerImage = await _ensureMarkerImage(controller, price, fuelType);
 
       if (markerImage == null) {
         continue;
@@ -402,7 +451,11 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        MapHeader(onLocationPressed: _goToCurrentLocation),
+        MapHeader(
+          onLocationPressed: _goToCurrentLocation,
+          selectedFuel: _selectedFuel,
+          onFuelSelected: _changeFuel,
+        ),
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -442,19 +495,21 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                 if (_selectedStation != null &&
                     _selectedStationDistanceKm != null)
                   Positioned(
-                    left: 14,
-                    right: 14,
-                    bottom: 18,
+                    left: 0,
+                    right: 0,
+                    bottom: -10,
                     child: _BestStationCard(
                       station: _selectedStation!.name,
                       address: _selectedStation!.address,
-                      price: _selectedStation!.gasoline95Price!
+                      price: _selectedStation!
+                          .priceFor(_selectedFuel)!
                           .toStringAsFixed(3)
                           .replaceAll('.', ','),
                       distance:
                           '${_selectedStationDistanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km',
                       fillCost:
-                          '${(_selectedStation!.gasoline95Price! * 40).toStringAsFixed(2).replaceAll('.', ',')} €',
+                          '${(_selectedStation!.priceFor(_selectedFuel)! * 40).toStringAsFixed(2).replaceAll('.', ',')} €',
+                      fuelType: _selectedFuel,
                     ),
                   ),
               ],
@@ -473,6 +528,7 @@ class _BestStationCard extends StatelessWidget {
     required this.price,
     required this.distance,
     required this.fillCost,
+    required this.fuelType,
   });
 
   final String station;
@@ -480,14 +536,18 @@ class _BestStationCard extends StatelessWidget {
   final String price;
   final String distance;
   final String fillCost;
+  final FuelType fuelType;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xF20A202A),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surface.withValues(alpha: 0.98),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(26),
+          topRight: Radius.circular(26),
+        ),
         border: Border.all(color: const Color(0xFF245064), width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -554,8 +614,8 @@ class _BestStationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF6FAFC),
                   borderRadius: BorderRadius.circular(13),
@@ -577,7 +637,7 @@ class _BestStationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 21,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -588,7 +648,7 @@ class _BestStationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -607,7 +667,7 @@ class _BestStationCard extends StatelessWidget {
                 price,
                 style: const TextStyle(
                   color: AppColors.primary,
-                  fontSize: 38,
+                  fontSize: 34,
                   height: 1,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
@@ -619,7 +679,7 @@ class _BestStationCard extends StatelessWidget {
                   '€/L',
                   style: TextStyle(
                     color: AppColors.primary,
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -658,7 +718,7 @@ class _BestStationCard extends StatelessWidget {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 54,
+                  height: 50,
                   child: OutlinedButton(
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(

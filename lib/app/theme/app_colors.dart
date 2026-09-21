@@ -6,7 +6,7 @@ abstract final class AppColors {
   static const backgroundDeep = Color(0xFF021018);
 
   // Superficies / tarjetas
-  static const surface = Color(0xFF0A1D27);
+  static const surface = Color(0xFF071820);
   static const surfaceElevated = Color(0xFF102630);
   static const surfaceSoft = Color(0xFF142B35);
 
