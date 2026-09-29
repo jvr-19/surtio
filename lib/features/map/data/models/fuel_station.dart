@@ -4,9 +4,11 @@ class FuelStation {
     required this.name,
     required this.address,
     required this.municipality,
+    required this.municipalityId,
     required this.province,
     required this.latitude,
     required this.longitude,
+    required this.schedule,
     this.gasoline95Price,
     this.gasoline98Price,
     this.dieselPrice,
@@ -18,9 +20,11 @@ class FuelStation {
   final String name;
   final String address;
   final String municipality;
+  final String municipalityId;
   final String province;
   final double latitude;
   final double longitude;
+  final String schedule;
 
   final double? gasoline95Price;
   final double? gasoline98Price;
@@ -34,9 +38,11 @@ class FuelStation {
       name: json['Rótulo']?.toString() ?? '',
       address: json['Dirección']?.toString() ?? '',
       municipality: json['Municipio']?.toString() ?? '',
+      municipalityId: json['IDMunicipio']?.toString() ?? '',
       province: json['Provincia']?.toString() ?? '',
       latitude: _parseDouble(json['Latitud']) ?? 0,
       longitude: _parseDouble(json['Longitud (WGS84)']) ?? 0,
+      schedule: json['Horario']?.toString().trim() ?? '',
       gasoline95Price: _parseDouble(json['Precio Gasolina 95 E5']),
       gasoline98Price: _parseDouble(json['Precio Gasolina 98 E5']),
       dieselPrice: _parseDouble(json['Precio Gasoleo A']),

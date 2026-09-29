@@ -6,6 +6,7 @@ import '../../../core/location/location_service.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../../map/data/services/fuel_station_api.dart';
 import '../../map/domain/services/station_distance_service.dart';
+import '../../station/presentation/station_detail_screen.dart';
 
 enum _NearbySort { distance, price }
 
@@ -392,7 +393,15 @@ class _StationCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () {
-          // Aquí conectaremos StationDetailScreen.
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => StationDetailScreen(
+                station: item.station,
+                distanceKm: item.distanceKm,
+                initialFuel: fuelType,
+              ),
+            ),
+          );
         },
         child: Container(
           padding: const EdgeInsets.all(15),

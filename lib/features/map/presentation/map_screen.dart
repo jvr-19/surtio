@@ -12,6 +12,7 @@ import '../../../core/map/map_config.dart';
 import '../data/models/fuel_station.dart';
 import '../data/services/fuel_station_api.dart';
 import '../domain/services/station_distance_service.dart';
+import '../../station/presentation/station_detail_screen.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
@@ -499,6 +500,8 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                     right: 0,
                     bottom: -10,
                     child: _BestStationCard(
+                      fuelStation: _selectedStation!,
+                      distanceKm: _selectedStationDistanceKm!,
                       station: _selectedStation!.name,
                       address: _selectedStation!.address,
                       price: _selectedStation!
@@ -523,6 +526,8 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
 class _BestStationCard extends StatelessWidget {
   const _BestStationCard({
+    required this.fuelStation,
+    required this.distanceKm,
     required this.station,
     required this.address,
     required this.price,
@@ -531,6 +536,8 @@ class _BestStationCard extends StatelessWidget {
     required this.fuelType,
   });
 
+  final FuelStation fuelStation;
+  final double distanceKm;
   final String station;
   final String address;
   final String price;
@@ -720,7 +727,17 @@ class _BestStationCard extends StatelessWidget {
                 child: SizedBox(
                   height: 50,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => StationDetailScreen(
+                            station: fuelStation,
+                            distanceKm: distanceKm,
+                            initialFuel: fuelType,
+                          ),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
                       backgroundColor: const Color(0xFF102A35),
