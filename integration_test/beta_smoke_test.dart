@@ -57,6 +57,12 @@ void main() {
       await tester.tap(find.text('Mapa').last);
       await tester.pump(const Duration(seconds: 2));
       expect(find.text('50 km'), findsOneWidget);
+      for (var i = 0; i < 60; i++) {
+        if (find.byType(LinearProgressIndicator).evaluate().isEmpty) break;
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      await tester.pump(const Duration(seconds: 1));
       await binding.takeScreenshot('07-map');
       await tester.tap(find.text('Cerca').last);
       await tester.pump(const Duration(milliseconds: 500));

@@ -24,3 +24,5 @@ La primera ejecución de GitHub Actions detectó una carpeta vacía de recursos 
 - Validar compartir y navegación externa en un teléfono físico.
 
 Segunda tanda: radio compartido y persistente, zona manual persistente sin guardar posición del dispositivo, hora de consulta y botón de actualización en mapa. Privacidad actualizada. Versión 1.0.0+3.
+
+Paquete AAB de esta tanda generado y firmado como 1.0.0+3 en la carpeta local dist, excluida de Git. Las instalaciones APK anteriores permanecen en 1.0.0+2.

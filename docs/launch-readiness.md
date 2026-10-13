@@ -18,7 +18,7 @@ Mapa, precios oficiales, filtros de combustible, búsqueda por nombre o direcci�
 
 1. Publicar y verificar la URL HTTPS de privacidad.
 2. Completar ficha, audiencia, clasificación y Seguridad de los datos según app y proveedores reales.
-3. Reconstruir el AAB con las últimas mejoras y verificar firma, versión e instalación.
+3. AAB 1.0.0+3 generado localmente y firma verificada; validar su instalación mediante Google Play antes de distribuir.
 4. Configurar el canal de prueba y recoger comentarios reales.
 5. Cumplir los requisitos de acceso a producción que indique Play Console.
 
