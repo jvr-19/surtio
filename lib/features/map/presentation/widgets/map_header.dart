@@ -67,23 +67,10 @@ class MapHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              InkWell(
-                onTap: onLocationPressed,
-                borderRadius: BorderRadius.circular(21),
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Icon(
-                    Icons.my_location_rounded,
-                    color: AppColors.textPrimary,
-                    size: 20,
-                  ),
-                ),
+              IconButton.filledTonal(
+                onPressed: onLocationPressed,
+                tooltip: 'Usar mi ubicación',
+                icon: const Icon(Icons.my_location_rounded),
               ),
             ],
           ),
@@ -120,6 +107,7 @@ class _FuelSelector extends StatelessWidget {
 
           return _FuelChip(
             label: fuel.label,
+            semanticLabel: fuel.fullName,
             selected: fuel == selectedFuel,
             onTap: () => onFuelSelected(fuel),
           );
@@ -132,38 +120,25 @@ class _FuelSelector extends StatelessWidget {
 class _FuelChip extends StatelessWidget {
   const _FuelChip({
     required this.label,
+    required this.semanticLabel,
     required this.selected,
     required this.onTap,
   });
-
   final String label;
+  final String semanticLabel;
   final bool selected;
   final VoidCallback onTap;
-
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(13),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.backgroundDeep : AppColors.textPrimary,
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ChoiceChip(
+    label: Text(label, semanticsLabel: semanticLabel),
+    selected: selected,
+    showCheckmark: false,
+    selectedColor: AppColors.primary,
+    backgroundColor: AppColors.surface,
+    labelStyle: TextStyle(
+      color: selected ? AppColors.background : AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    ),
+    onSelected: (_) => onTap(),
+  );
 }

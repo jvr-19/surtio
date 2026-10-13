@@ -26,3 +26,16 @@ La primera ejecución de GitHub Actions detectó una carpeta vacía de recursos 
 Segunda tanda: radio compartido y persistente, zona manual persistente sin guardar posición del dispositivo, hora de consulta y botón de actualización en mapa. Privacidad actualizada. Versión 1.0.0+3.
 
 Paquete AAB de esta tanda generado y firmado como 1.0.0+3 en la carpeta local dist, excluida de Git. Las instalaciones APK anteriores permanecen en 1.0.0+2.
+
+## Mapa y accesibilidad — versión 1.0.0+4
+
+- Colisiones de etiquetas activadas en el mapa y prioridad de colocación por precio ascendente. Las estaciones permanecen en la fuente y la lista completa; acercar el mapa permite ver más etiquetas.
+- La fuente se vacía al no haber estaciones, evitando conservar marcadores de otra zona.
+- Tarjeta de estación en el mapa con desplazamiento cuando el texto ocupa más espacio.
+- Selectores de combustible con estado seleccionado y nombres completos para accesibilidad; botón de ubicación con descripción.
+- Lista adaptada al teclado abierto; estadísticas del vehículo en columna con texto grande; precios, distancia, acciones y formulario con tamaños adaptables.
+- Pruebas automáticas con texto al 200 %, pantalla de 360 × 800 y teclado simulado. La revisión con lector de pantalla real y teléfono físico sigue pendiente.
+
+El AAB 1.0.0+3 anterior no incorpora esta tanda.
+
+Validación de esta tanda: 32 pruebas correctas y análisis sin incidencias. Recorrido Android con datos reales y prueba adicional del mapa al 200 % completados en emulador API 36. Captura técnica en docs/screenshots/08-map-large-text.png.

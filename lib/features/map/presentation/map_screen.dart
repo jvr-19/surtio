@@ -401,6 +401,8 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     );
 
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    picture.dispose();
 
     if (byteData == null) {
       throw StateError('No se pudo generar el marcador de Surtio.');
@@ -441,7 +443,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   }) async {
     final controller = _mapController;
 
-    if (controller == null || stations.isEmpty) {
+    if (controller == null) {
       return;
     }
 
@@ -469,6 +471,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
           'id': station.id,
           'name': station.name,
           'markerImage': markerImage,
+          'price': price,
         },
         'geometry': {
           'type': 'Point',
@@ -496,8 +499,10 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         iconImage: [Expressions.get, 'markerImage'],
         iconSize: 0.90,
         iconAnchor: 'bottom',
-        iconAllowOverlap: true,
-        iconIgnorePlacement: true,
+        iconAllowOverlap: false,
+        iconIgnorePlacement: false,
+        iconPadding: 4,
+        symbolSortKey: [Expressions.get, 'price'],
       ),
     );
 
@@ -654,21 +659,28 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                   Positioned(
                     left: 0,
                     right: 0,
-                    bottom: -10,
-                    child: _BestStationCard(
-                      fuelStation: _selectedStation!,
-                      distanceKm: _selectedStationDistanceKm!,
-                      station: _selectedStation!.name,
-                      address: _selectedStation!.address,
-                      price: _selectedStation!
-                          .priceFor(_selectedFuel)!
-                          .toStringAsFixed(3)
-                          .replaceAll('.', ','),
-                      distance:
-                          '${_selectedStationDistanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km',
-                      fillCost:
-                          '${(_selectedStation!.priceFor(_selectedFuel)! * 40).toStringAsFixed(2).replaceAll('.', ',')} €',
-                      fuelType: _selectedFuel,
+                    bottom: 0,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * 0.38,
+                      ),
+                      child: SingleChildScrollView(
+                        child: _BestStationCard(
+                          fuelStation: _selectedStation!,
+                          distanceKm: _selectedStationDistanceKm!,
+                          station: _selectedStation!.name,
+                          address: _selectedStation!.address,
+                          price: _selectedStation!
+                              .priceFor(_selectedFuel)!
+                              .toStringAsFixed(3)
+                              .replaceAll('.', ','),
+                          distance:
+                              '${_selectedStationDistanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km',
+                          fillCost:
+                              '${(_selectedStation!.priceFor(_selectedFuel)! * 40).toStringAsFixed(2).replaceAll('.', ',')} €',
+                          fuelType: _selectedFuel,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -726,35 +738,42 @@ class _BestStationCard extends StatelessWidget {
           // Cabecera
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0x26FFE600),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.workspace_premium_rounded,
-                      size: 17,
-                      color: Color(0xFFFFE600),
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Precio más bajo en la zona',
-                      style: TextStyle(
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0x26FFE600),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.workspace_premium_rounded,
+                        size: 17,
                         color: Color(0xFFFFE600),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Más barata en la zona',
+                          style: TextStyle(
+                            color: Color(0xFFFFE600),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               const Icon(
-                Icons.route_rounded,
+                Icons.near_me_outlined,
                 size: 16,
                 color: AppColors.textSecondary,
               ),
@@ -881,7 +900,7 @@ class _BestStationCard extends StatelessWidget {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 50,
+                  height: 50 * MediaQuery.textScalerOf(context).scale(1),
                   child: OutlinedButton(
                     onPressed: () {
                       Navigator.of(context).push(

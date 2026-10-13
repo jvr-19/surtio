@@ -94,6 +94,8 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<FuelType>(
+                isExpanded: true,
+                itemHeight: null,
                 initialValue: _fuelType,
                 dropdownColor: AppColors.surfaceElevated,
                 decoration: _decoration(
@@ -155,7 +157,7 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
               ),
               const SizedBox(height: 26),
               SizedBox(
-                height: 54,
+                height: 54 * MediaQuery.textScalerOf(context).scale(1),
                 child: FilledButton.icon(
                   onPressed: _save,
                   style: FilledButton.styleFrom(

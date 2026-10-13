@@ -354,6 +354,29 @@ class _VehicleStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.textScalerOf(context).scale(14) > 21) {
+      return Column(
+        children: [
+          _StatCard(
+            value: _formatDecimal(profile.averageConsumption),
+            unit: 'L/100 km',
+            label: 'Consumo medio',
+          ),
+          const SizedBox(height: 10),
+          _StatCard(
+            value: _formatDecimal(profile.tankCapacity),
+            unit: 'L',
+            label: 'Capacidad',
+          ),
+          const SizedBox(height: 10),
+          _StatCard(
+            value: '~${profile.theoreticalRangeKm.round()}',
+            unit: 'km',
+            label: 'Autonomía teórica',
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Expanded(
@@ -398,10 +421,12 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 106,
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 106),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: _cardDecoration(radius: 16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FittedBox(
@@ -434,7 +459,7 @@ class _StatCard extends StatelessWidget {
               ],
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           Text(
             label,
             maxLines: 2,

@@ -9,7 +9,7 @@ Mapa, precios oficiales, filtros de combustible, búsqueda por nombre o direcci�
 ## Validación local
 
 - Flutter 3.41.7, Dart 3.11.5; Android SDK 36.
-- Formato correcto, análisis sin incidencias y 30 pruebas correctas.
+- Formato correcto, análisis sin incidencias y 32 pruebas correctas.
 - Recorrido en emulador Android API 36 con datos reales: lista, detalle, favoritos, privacidad y municipio manual.
 - Pruebas de navegación externa a nivel de URI y contenido; pendiente verificación completa en teléfono físico.
 - Bibliotecas nativas de 64 bits inspeccionadas con alineación ELF de al menos 16 KB; pendiente dispositivo con páginas de 16 KB.

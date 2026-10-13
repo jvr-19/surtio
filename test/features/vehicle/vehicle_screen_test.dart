@@ -45,6 +45,12 @@ void main() {
 Widget _appWithRepository(VehicleProfileRepository repository) {
   return MaterialApp(
     theme: AppTheme.dark,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: const TextScaler.linear(2)),
+      child: child!,
+    ),
     home: Scaffold(body: VehicleScreen(repository: repository)),
   );
 }

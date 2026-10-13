@@ -417,14 +417,16 @@ class _StationIdentity extends StatelessWidget {
                     size: 16,
                   ),
                   const SizedBox(width: 5),
-                  Text(
-                    distanceKm == null
-                        ? station.municipality
-                        : '${distanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km en línea recta',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      distanceKm == null
+                          ? station.municipality
+                          : '${distanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km en línea recta',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -459,7 +461,7 @@ class _FuelPriceSelector extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 86,
+      height: 86 * MediaQuery.textScalerOf(context).scale(1),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: fuels.length,
@@ -474,7 +476,7 @@ class _FuelPriceSelector extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              width: 122,
+              width: 160 * MediaQuery.textScalerOf(context).scale(1),
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
               decoration: BoxDecoration(
                 color: selected
@@ -647,7 +649,7 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 82,
+        height: 82 * MediaQuery.textScalerOf(context).scale(1),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),

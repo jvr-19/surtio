@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:surtio/app/app.dart';
+import 'package:surtio/app/theme/app_theme.dart';
+import 'package:surtio/features/map/presentation/map_screen.dart';
 import 'package:surtio/core/location/search_area.dart';
 import 'package:surtio/core/stations/favorite_stations.dart';
 import 'package:surtio/features/map/data/services/fuel_station_api.dart';
@@ -109,6 +111,33 @@ void main() {
       if (!initiallySaved) await favorites.toggle(station.id);
     },
   );
+  testWidgets('Map remains usable with text at 200 percent', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: const Scaffold(body: SafeArea(child: MapScreen())),
+      ),
+    );
+    await waitFor(tester, find.text('Más barata en la zona'));
+    for (var i = 0; i < 60; i++) {
+      if (find.byType(LinearProgressIndicator).evaluate().isEmpty) break;
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    await tester.ensureVisible(find.text('Ver detalles'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.takeException(), isNull);
+    await binding.convertFlutterSurfaceToImage();
+    await tester.pump();
+    await binding.takeScreenshot('08-map-large-text');
+    await tester.pumpWidget(const SizedBox());
+  });
 }
 
 Future<void> waitFor(WidgetTester tester, Finder finder) async {

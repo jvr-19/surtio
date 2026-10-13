@@ -14,6 +14,8 @@ void main() {
     final areas = SearchAreaController();
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     areas.select(
@@ -26,7 +28,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
+          data: const MediaQueryData(
+            textScaler: TextScaler.linear(2),
+            viewInsets: EdgeInsets.only(bottom: 300),
+          ),
           child: Scaffold(
             body: NearbyScreen(api: const _Stations(), area: areas),
           ),

@@ -173,18 +173,19 @@ class _NearbyScreenState extends State<NearbyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
-            child: Text(
-              'Cerca',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
+          if (View.of(context).viewInsets.bottom == 0)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
+              child: Text(
+                'Cerca',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -209,7 +210,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          _FuelSelector(selectedFuel: _selectedFuel, onSelected: _changeFuel),
+          if (View.of(context).viewInsets.bottom == 0)
+            _FuelSelector(selectedFuel: _selectedFuel, onSelected: _changeFuel),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             child: TextField(
@@ -224,27 +226,28 @@ class _NearbyScreenState extends State<NearbyScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                const Text('Radio de búsqueda'),
-                for (final radius in SearchAreaController.radiusOptions)
-                  ChoiceChip(
-                    label: Text('${radius.toInt()} km'),
-                    selected: _radiusKm == radius,
-                    onSelected: _loading
-                        ? null
-                        : (selected) {
-                            if (!selected) return;
-                            _area.selectRadius(radius);
-                          },
-                  ),
-              ],
+          if (View.of(context).viewInsets.bottom == 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text('Radio de búsqueda'),
+                  for (final radius in SearchAreaController.radiusOptions)
+                    ChoiceChip(
+                      label: Text('${radius.toInt()} km'),
+                      selected: _radiusKm == radius,
+                      onSelected: _loading
+                          ? null
+                          : (selected) {
+                              if (!selected) return;
+                              _area.selectRadius(radius);
+                            },
+                    ),
+                ],
+              ),
             ),
-          ),
           Expanded(child: _buildContent()),
         ],
       ),
@@ -735,6 +738,7 @@ class _FuelSelector extends StatelessWidget {
 
           return _FuelChip(
             label: fuel.label,
+            semanticLabel: fuel.fullName,
             selected: fuel == selectedFuel,
             onTap: () => onSelected(fuel),
           );
@@ -747,40 +751,27 @@ class _FuelSelector extends StatelessWidget {
 class _FuelChip extends StatelessWidget {
   const _FuelChip({
     required this.label,
+    required this.semanticLabel,
     required this.selected,
     required this.onTap,
   });
-
   final String label;
+  final String semanticLabel;
   final bool selected;
   final VoidCallback onTap;
-
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(13),
-      onTap: onTap,
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? AppColors.background : AppColors.textPrimary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ChoiceChip(
+    label: Text(label, semanticsLabel: semanticLabel),
+    selected: selected,
+    showCheckmark: false,
+    selectedColor: AppColors.primary,
+    backgroundColor: AppColors.surface,
+    labelStyle: TextStyle(
+      color: selected ? AppColors.background : AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+    ),
+    onSelected: (_) => onTap(),
+  );
 }
 
 class _NearbyStation {
