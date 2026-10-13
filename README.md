@@ -9,6 +9,8 @@ Compara precios oficiales de combustible en España y encuentra dónde repostar.
 - Mapa y lista de gasolineras con selección compartida de combustible y zona.
 - Búsqueda por estación o dirección y radios de 5, 10, 20 y 50 km en la lista.
 - Ordenación por precio o distancia en línea recta.
+- Radio compartido entre mapa y lista, con zona manual y radio recordados entre sesiones.
+- Hora de consulta visible y actualización manual de precios.
 - Detalle de estación, histórico cuando está disponible, navegación y compartir.
 - Favoritos y perfil de vehículo guardados en el dispositivo.
 - Selección manual de municipio sin conceder acceso a ubicación.

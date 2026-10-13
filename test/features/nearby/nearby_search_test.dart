@@ -11,11 +11,12 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
+    final areas = SearchAreaController();
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    SearchAreaController.instance.select(
+    areas.select(
       const SearchArea(
         latitude: 28.1,
         longitude: -15.4,
@@ -26,7 +27,9 @@ void main() {
       MaterialApp(
         home: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
-          child: const Scaffold(body: NearbyScreen(api: _Stations())),
+          child: Scaffold(
+            body: NearbyScreen(api: const _Stations(), area: areas),
+          ),
         ),
       ),
     );
@@ -41,7 +44,8 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    SearchAreaController.instance.select(
+    final areas = SearchAreaController();
+    areas.select(
       const SearchArea(
         latitude: 28.1,
         longitude: -15.4,
@@ -49,8 +53,10 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: NearbyScreen(api: _Stations())),
+      MaterialApp(
+        home: Scaffold(
+          body: NearbyScreen(api: const _Stations(), area: areas),
+        ),
       ),
     );
     await tester.pumpAndSettle();

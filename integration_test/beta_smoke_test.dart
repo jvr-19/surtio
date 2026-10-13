@@ -13,6 +13,7 @@ void main() {
   testWidgets(
     'manual area, real prices, station detail, favorites and privacy',
     (tester) async {
+      SearchAreaController.instance.selectRadius(20);
       SearchAreaController.instance.select(
         const SearchArea(
           latitude: 28.1,
@@ -46,6 +47,21 @@ void main() {
       await binding.convertFlutterSurfaceToImage();
       await tester.pump();
       await binding.takeScreenshot('01-nearby');
+      expect(find.textContaining('Consulta:'), findsWidgets);
+      await tester.enterText(find.byType(TextField), station.name);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text(station.name), findsWidgets);
+      await tester.enterText(find.byType(TextField), '');
+      await tester.tap(find.widgetWithText(ChoiceChip, '50 km'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text('Mapa').last);
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('50 km'), findsOneWidget);
+      await binding.takeScreenshot('07-map');
+      await tester.tap(find.text('Cerca').last);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.widgetWithText(ChoiceChip, '20 km'));
+      await waitFor(tester, find.text(station.name).first);
 
       await tester.tap(find.text(station.name).first);
       await tester.pump(const Duration(seconds: 2));

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../shared/widgets/price_freshness.dart';
 import '../../../core/location/search_area.dart';
 import '../../../core/location/area_picker.dart';
 import '../../../core/stations/fuel_selection.dart';
@@ -13,9 +14,10 @@ import '../../station/presentation/station_detail_screen.dart';
 enum _NearbySort { distance, price }
 
 class NearbyScreen extends StatefulWidget {
-  const NearbyScreen({super.key, this.api = const FuelStationApi()});
+  const NearbyScreen({super.key, this.api = const FuelStationApi(), this.area});
 
   final FuelStationApi api;
+  final SearchAreaController? area;
 
   @override
   State<NearbyScreen> createState() => _NearbyScreenState();
@@ -23,7 +25,7 @@ class NearbyScreen extends StatefulWidget {
 
 class _NearbyScreenState extends State<NearbyScreen> {
   late final FuelStationApi _fuelStationApi = widget.api;
-  final _area = SearchAreaController.instance;
+  late final _area = widget.area ?? SearchAreaController.instance;
   int _requestId = 0;
   final _fuelSelection = FuelSelection.instance;
   final StationDistanceService _distanceService = StationDistanceService();
@@ -31,11 +33,12 @@ class _NearbyScreenState extends State<NearbyScreen> {
   List<_NearbyStation> _allStations = [];
   List<_NearbyStation> _stations = [];
 
-  double _radiusKm = 20;
+  double get _radiusKm => _area.radiusKm;
   String _query = '';
 
   bool _loading = true;
   String? _error;
+  DateTime? _queriedAt;
 
   _NearbySort _sort = _NearbySort.distance;
   FuelType _selectedFuel = FuelType.gasoline95;
@@ -109,6 +112,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
       if (!mounted || requestId != _requestId) return;
 
       setState(() {
+        _queriedAt = FuelStationApi.lastUpdated;
         _allStations = result;
         _applyFuelFilter();
         _loading = false;
@@ -227,7 +231,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text('Radio de búsqueda'),
-                for (final radius in [5.0, 10.0, 20.0, 50.0])
+                for (final radius in SearchAreaController.radiusOptions)
                   ChoiceChip(
                     label: Text('${radius.toInt()} km'),
                     selected: _radiusKm == radius,
@@ -235,8 +239,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                         ? null
                         : (selected) {
                             if (!selected) return;
-                            setState(() => _radiusKm = radius);
-                            _loadStations();
+                            _area.selectRadius(radius);
                           },
                   ),
               ],
@@ -338,6 +341,12 @@ class _NearbyScreenState extends State<NearbyScreen> {
                   color: AppColors.textSecondary,
                 ),
               ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+              child: PriceFreshness(queriedAt: _queriedAt),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),

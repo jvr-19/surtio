@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../app/theme/app_colors.dart';
 import 'widgets/map_header.dart';
 import '../../../core/location/search_area.dart';
+import '../../../shared/widgets/price_freshness.dart';
 import '../../../core/location/area_picker.dart';
 import '../../../core/stations/station_actions.dart';
 import '../../../core/stations/fuel_selection.dart';
@@ -67,6 +68,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
   List<FuelStation> _nearbyStations = [];
 
+  DateTime? _queriedAt;
   double? _currentLatitude;
   double? _currentLongitude;
 
@@ -101,7 +103,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     if (mounted) await _showArea();
   }
 
-  Future<void> _showArea() async {
+  Future<void> _showArea({bool refresh = false}) async {
     final request = ++_loadRequest;
     final area = _area.area;
     setState(() {
@@ -116,7 +118,13 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(area.latitude, area.longitude),
-            zoom: 12.5,
+            zoom: _area.radiusKm <= 5
+                ? 13
+                : _area.radiusKm <= 10
+                ? 12.5
+                : _area.radiusKm <= 20
+                ? 11.5
+                : 10.5,
           ),
         ),
       );
@@ -125,6 +133,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         latitude: area.latitude,
         longitude: area.longitude,
         requestId: request,
+        refresh: refresh,
       );
     } catch (_) {
       if (!mounted || request != _loadRequest) return;
@@ -214,20 +223,24 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     required double latitude,
     required double longitude,
     required int requestId,
+    bool refresh = false,
   }) async {
     try {
-      final stations = await _fuelStationApi.fetchStations();
+      final stations = await _fuelStationApi.fetchStations(
+        forceRefresh: refresh,
+      );
 
       final nearbyStations = _stationDistanceService.nearbyStations(
         stations: stations,
         latitude: latitude,
         longitude: longitude,
-        radiusKm: 20,
+        radiusKm: _area.radiusKm,
       );
 
       if (!mounted || requestId != _loadRequest) return;
 
       setState(() {
+        _queriedAt = FuelStationApi.lastUpdated;
         _nearbyStations = nearbyStations;
         _currentLatitude = latitude;
         _currentLongitude = longitude;
@@ -250,7 +263,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
       debugPrint('⛽ Surtio: ${stations.length} estaciones nacionales');
 
       debugPrint(
-        '📍 Surtio: ${nearbyStations.length} estaciones a menos de 20 km',
+        '📍 Surtio: ${nearbyStations.length} estaciones a menos de ${_area.radiusKm.toInt()} km',
       );
 
       for (final station in nearbyStations.take(5)) {
@@ -517,10 +530,41 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                   ),
                 ),
               ),
+              PopupMenuButton<double>(
+                tooltip: 'Radio de búsqueda',
+                initialValue: _area.radiusKm,
+                onSelected: _area.selectRadius,
+                itemBuilder: (_) => [
+                  for (final radius in SearchAreaController.radiusOptions)
+                    PopupMenuItem(
+                      value: radius,
+                      child: Text('${radius.toInt()} km'),
+                    ),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text('${_area.radiusKm.toInt()} km'),
+                ),
+              ),
               TextButton.icon(
                 onPressed: () => pickSearchArea(context),
                 icon: const Icon(Icons.search, size: 18),
                 label: const Text('Cambiar'),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Row(
+            children: [
+              Expanded(child: PriceFreshness(queriedAt: _queriedAt)),
+              IconButton(
+                tooltip: 'Actualizar precios',
+                onPressed: _stationsLoading
+                    ? null
+                    : () => _showArea(refresh: true),
+                icon: const Icon(Icons.refresh),
               ),
             ],
           ),
@@ -588,7 +632,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                           children: [
                             Text(
                               _stationError ??
-                                  'No hay precios de este combustible a 20 km de la zona.',
+                                  'No hay precios de este combustible a ${_area.radiusKm.toInt()} km de la zona.',
                             ),
                             TextButton(
                               onPressed: _stationError == null
@@ -698,7 +742,7 @@ class _BestStationCard extends StatelessWidget {
                     ),
                     SizedBox(width: 6),
                     Text(
-                      'Precio más bajo cerca de ti',
+                      'Precio más bajo en la zona',
                       style: TextStyle(
                         color: Color(0xFFFFE600),
                         fontSize: 12,
