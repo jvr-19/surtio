@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../core/location/location_service.dart';
+import '../../../core/location/search_area.dart';
+import '../../../core/location/area_picker.dart';
+import '../../../core/stations/fuel_selection.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../../map/data/services/fuel_station_api.dart';
 import '../../map/domain/services/station_distance_service.dart';
@@ -11,19 +13,26 @@ import '../../station/presentation/station_detail_screen.dart';
 enum _NearbySort { distance, price }
 
 class NearbyScreen extends StatefulWidget {
-  const NearbyScreen({super.key});
+  const NearbyScreen({super.key, this.api = const FuelStationApi()});
+
+  final FuelStationApi api;
 
   @override
   State<NearbyScreen> createState() => _NearbyScreenState();
 }
 
 class _NearbyScreenState extends State<NearbyScreen> {
-  final FuelStationApi _fuelStationApi = FuelStationApi();
-  final LocationService _locationService = LocationService();
+  late final FuelStationApi _fuelStationApi = widget.api;
+  final _area = SearchAreaController.instance;
+  int _requestId = 0;
+  final _fuelSelection = FuelSelection.instance;
   final StationDistanceService _distanceService = StationDistanceService();
 
   List<_NearbyStation> _allStations = [];
   List<_NearbyStation> _stations = [];
+
+  double _radiusKm = 20;
+  String _query = '';
 
   bool _loading = true;
   String? _error;
@@ -34,24 +43,51 @@ class _NearbyScreenState extends State<NearbyScreen> {
   @override
   void initState() {
     super.initState();
-    _loadStations();
+    _area.addListener(_areaChanged);
+    _fuelSelection.addListener(_fuelChanged);
+    _selectedFuel = _fuelSelection.value;
+    _fuelSelection.initialize();
+    _initialize();
   }
 
-  Future<void> _loadStations() async {
+  Future<void> _initialize() async {
+    await _area.initialize();
+    if (mounted) await _loadStations();
+  }
+
+  void _fuelChanged() {
+    if (mounted) _changeFuel(_fuelSelection.value);
+  }
+
+  void _areaChanged() {
+    if (mounted) _loadStations();
+  }
+
+  @override
+  void dispose() {
+    _area.removeListener(_areaChanged);
+    _fuelSelection.removeListener(_fuelChanged);
+    super.dispose();
+  }
+
+  Future<void> _loadStations({bool refresh = false}) async {
+    final requestId = ++_requestId;
     setState(() {
       _loading = true;
       _error = null;
     });
 
     try {
-      final position = await _locationService.getCurrentPosition();
-      final stations = await _fuelStationApi.fetchStations();
+      final position = _area.area;
+      final stations = await _fuelStationApi.fetchStations(
+        forceRefresh: refresh,
+      );
 
       final nearby = _distanceService.nearbyStations(
         stations: stations,
         latitude: position.latitude,
         longitude: position.longitude,
-        radiusKm: 20,
+        radiusKm: _radiusKm,
       );
 
       final result = nearby
@@ -70,7 +106,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
           )
           .toList();
 
-      if (!mounted) return;
+      if (!mounted || requestId != _requestId) return;
 
       setState(() {
         _allStations = result;
@@ -78,7 +114,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
         _loading = false;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || requestId != _requestId) return;
 
       setState(() {
         _loading = false;
@@ -88,16 +124,20 @@ class _NearbyScreenState extends State<NearbyScreen> {
   }
 
   void _changeFuel(FuelType fuel) {
+    if (fuel == _selectedFuel) return;
     setState(() {
       _selectedFuel = fuel;
       _applyFuelFilter();
     });
+    _fuelSelection.select(fuel);
   }
 
   void _applyFuelFilter() {
-    _stations = _allStations
-        .where((item) => item.station.priceFor(_selectedFuel) != null)
-        .toList();
+    _stations = _allStations.where((item) {
+      final station = item.station;
+      return station.priceFor(_selectedFuel) != null &&
+          '${station.name} ${station.address}'.toLowerCase().contains(_query);
+    }).toList();
 
     _sortStations();
   }
@@ -141,16 +181,67 @@ class _NearbyScreenState extends State<NearbyScreen> {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 3, 20, 0),
-            child: Text(
-              'Gasolineras cerca de ti',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _area.area.isDevice
+                        ? 'Gasolineras cerca de ti'
+                        : 'Zona: ${_area.area.label}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => pickSearchArea(context),
+                  icon: const Icon(Icons.search, size: 18),
+                  label: const Text('Cambiar'),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 18),
           _FuelSelector(selectedFuel: _selectedFuel, onSelected: _changeFuel),
-          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: TextField(
+              onChanged: (value) => setState(() {
+                _query = value.trim().toLowerCase();
+                _applyFuelFilter();
+              }),
+              decoration: const InputDecoration(
+                hintText: 'Buscar estación o dirección',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                const Text('Radio de búsqueda'),
+                for (final radius in [5.0, 10.0, 20.0, 50.0])
+                  ChoiceChip(
+                    label: Text('${radius.toInt()} km'),
+                    selected: _radiusKm == radius,
+                    onSelected: _loading
+                        ? null
+                        : (selected) {
+                            if (!selected) return;
+                            setState(() => _radiusKm = radius);
+                            _loadStations();
+                          },
+                  ),
+              ],
+            ),
+          ),
           Expanded(child: _buildContent()),
         ],
       ),
@@ -194,10 +285,25 @@ class _NearbyScreenState extends State<NearbyScreen> {
     }
 
     if (_stations.isEmpty) {
-      return const Center(
-        child: Text(
-          'No hay estaciones con precio disponible.',
-          style: TextStyle(color: AppColors.textSecondary),
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _query.isEmpty
+                  ? 'No hay estaciones con este combustible a ${_radiusKm.toInt()} km.'
+                  : 'No hay estaciones que coincidan con tu búsqueda.',
+              textAlign: TextAlign.center,
+            ),
+            TextButton(
+              onPressed: () => pickSearchArea(context),
+              child: const Text('Elegir otra zona'),
+            ),
+            TextButton(
+              onPressed: () => _loadStations(refresh: true),
+              child: const Text('Actualizar precios'),
+            ),
+          ],
         ),
       );
     }
@@ -208,7 +314,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: _loadStations,
+      onRefresh: () => _loadStations(refresh: true),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -219,6 +325,18 @@ class _NearbyScreenState extends State<NearbyScreen> {
                 lowestPrice: lowestPrice,
                 stationCount: _stations.length,
                 fuelType: _selectedFuel,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Text(
+                'Distancias en línea recta ${_area.area.isDevice ? "desde tu ubicación" : "desde un punto de la zona"}. Desliza para actualizar precios.',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
           ),
@@ -239,7 +357,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
                     ),
                   ),
                   _SortButton(
-                    label: 'Distancia',
+                    label: _area.area.isDevice ? 'Distancia' : 'Desde zona',
                     selected: _sort == _NearbySort.distance,
                     onTap: () => _changeSort(_NearbySort.distance),
                   ),
@@ -597,7 +715,7 @@ class _FuelSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 48,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,

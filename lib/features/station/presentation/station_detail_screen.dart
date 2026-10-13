@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/stations/station_actions.dart';
+import '../../../core/stations/favorite_stations.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../data/models/fuel_price_history_point.dart';
 import '../data/services/fuel_price_history_service.dart';
@@ -15,7 +17,7 @@ class StationDetailScreen extends StatefulWidget {
   });
 
   final FuelStation station;
-  final double distanceKm;
+  final double? distanceKm;
   final FuelType initialFuel;
 
   @override
@@ -24,6 +26,8 @@ class StationDetailScreen extends StatefulWidget {
 
 class _StationDetailScreenState extends State<StationDetailScreen> {
   late FuelType _selectedFuel;
+  final _favorites = FavoriteStations.instance;
+  bool _savingFavorite = false;
 
   final _historyService = FuelPriceHistoryService();
 
@@ -43,6 +47,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   void initState() {
     super.initState();
 
+    _loadFavorites();
     final availableFuels = _availableFuels;
 
     if (availableFuels.isEmpty) {
@@ -56,6 +61,33 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
         : availableFuels.first;
 
     _loadHistory();
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      await _favorites.load();
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) _showError('No se pudieron cargar los favoritos.');
+    }
+  }
+
+  void _showError(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
+
+  Future<void> _toggleFavorite() async {
+    if (_savingFavorite) return;
+    setState(() => _savingFavorite = true);
+    try {
+      await _favorites.toggle(widget.station.id);
+    } catch (_) {
+      if (mounted) {
+        _showError('No se pudo guardar el favorito. Inténtalo de nuevo.');
+      }
+    } finally {
+      if (mounted) setState(() => _savingFavorite = false);
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -115,7 +147,13 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TopBar(onBack: () => Navigator.of(context).pop()),
+              _TopBar(
+                onBack: () => Navigator.of(context).pop(),
+                isFavorite: _favorites.contains(station.id),
+                onFavorite: _toggleFavorite,
+                onShare: () =>
+                    StationActions.share(context, station, _selectedFuel),
+              ),
               const SizedBox(height: 14),
 
               // Más adelante aquí irá la foto real de la estación.
@@ -149,14 +187,24 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               _PrimaryButton(
                 label: 'Ir ahora',
                 icon: Icons.navigation_rounded,
-                onPressed: () {
-                  // Próximamente: abrir navegación.
-                },
+                onPressed: () => StationActions.navigate(context, station),
               ),
 
               const SizedBox(height: 14),
 
-              const _ActionButtons(),
+              _ActionButtons(
+                isFavorite: _favorites.contains(station.id),
+                saving: _savingFavorite,
+                onFavorite: _toggleFavorite,
+                onShare: () =>
+                    StationActions.share(context, station, _selectedFuel),
+                onRoute: () => StationActions.navigate(context, station),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Precios informativos de la fuente oficial. Confirma el precio en la estación.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
 
               if (station.schedule.isNotEmpty) ...[
                 const SizedBox(height: 24),
@@ -191,40 +239,64 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onBack});
+  const _TopBar({
+    required this.onBack,
+    required this.isFavorite,
+    required this.onFavorite,
+    required this.onShare,
+  });
 
   final VoidCallback onBack;
+  final bool isFavorite;
+  final VoidCallback onFavorite;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _TopButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
+        _TopButton(
+          icon: Icons.arrow_back_ios_new_rounded,
+          onTap: onBack,
+          label: 'Volver',
+        ),
         const Spacer(),
-        _TopButton(icon: Icons.favorite_border_rounded, onTap: () {}),
+        _TopButton(
+          icon: isFavorite
+              ? Icons.favorite_rounded
+              : Icons.favorite_border_rounded,
+          onTap: onFavorite,
+          label: isFavorite ? 'Quitar favorito' : 'Guardar favorito',
+        ),
         const SizedBox(width: 10),
-        _TopButton(icon: Icons.ios_share_rounded, onTap: () {}),
+        _TopButton(
+          icon: Icons.ios_share_rounded,
+          onTap: onShare,
+          label: 'Compartir estación',
+        ),
       ],
     );
   }
 }
 
 class _TopButton extends StatelessWidget {
-  const _TopButton({required this.icon, required this.onTap});
+  const _TopButton({
+    required this.icon,
+    required this.onTap,
+    required this.label,
+  });
 
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: Icon(icon, color: AppColors.textPrimary, size: 23),
-      ),
+    return IconButton(
+      tooltip: label,
+      onPressed: onTap,
+      icon: Icon(icon, color: AppColors.textPrimary, size: 23),
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
     );
   }
 }
@@ -285,7 +357,7 @@ class _StationIdentity extends StatelessWidget {
   const _StationIdentity({required this.station, required this.distanceKm});
 
   final FuelStation station;
-  final double distanceKm;
+  final double? distanceKm;
 
   @override
   Widget build(BuildContext context) {
@@ -346,7 +418,9 @@ class _StationIdentity extends StatelessWidget {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    '${distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km',
+                    distanceKm == null
+                        ? station.municipality
+                        : '${distanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km en línea recta',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
@@ -505,7 +579,18 @@ class _PrimaryButton extends StatelessWidget {
 }
 
 class _ActionButtons extends StatelessWidget {
-  const _ActionButtons();
+  const _ActionButtons({
+    required this.isFavorite,
+    required this.saving,
+    required this.onFavorite,
+    required this.onShare,
+    required this.onRoute,
+  });
+  final bool isFavorite;
+  final bool saving;
+  final VoidCallback onFavorite;
+  final VoidCallback onShare;
+  final VoidCallback onRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -513,9 +598,15 @@ class _ActionButtons extends StatelessWidget {
       children: [
         Expanded(
           child: _ActionButton(
-            icon: Icons.favorite_border_rounded,
-            label: 'Guardar',
-            onTap: () {},
+            icon: isFavorite
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
+            label: saving
+                ? 'Guardando…'
+                : isFavorite
+                ? 'Guardada'
+                : 'Guardar',
+            onTap: onFavorite,
           ),
         ),
         const SizedBox(width: 10),
@@ -523,7 +614,7 @@ class _ActionButtons extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.share_rounded,
             label: 'Compartir',
-            onTap: () {},
+            onTap: onShare,
           ),
         ),
         const SizedBox(width: 10),
@@ -531,7 +622,7 @@ class _ActionButtons extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.route_rounded,
             label: 'Ruta',
-            onTap: () {},
+            onTap: onRoute,
           ),
         ),
       ],

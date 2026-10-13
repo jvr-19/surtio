@@ -54,7 +54,9 @@ class OfficialFuelPriceHistoryDataSource implements FuelPriceHistoryDataSource {
     final uri = Uri.parse(
       '$_baseUrl/${_formatApiDate(date)}/${station.municipalityId}',
     );
-    final response = await _client.get(uri);
+    final response = await _client
+        .get(uri)
+        .timeout(const Duration(seconds: 15));
 
     if (response.statusCode != 200) {
       throw http.ClientException(

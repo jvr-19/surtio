@@ -117,3 +117,23 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+# Local desktop files and upload keys
+.DS_Store
+*.keystore
+
+# Locally built distribution artifacts
+dist/
+
+# Keep the app dependency versions reproducible
+!pubspec.lock
+
+# Private operational notes and local editor configuration
+docs/private/
+.idea/
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.pem
+*.key

@@ -7,7 +7,10 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../../app/theme/app_colors.dart';
 import 'widgets/map_header.dart';
-import '../../../core/location/location_service.dart';
+import '../../../core/location/search_area.dart';
+import '../../../core/location/area_picker.dart';
+import '../../../core/stations/station_actions.dart';
+import '../../../core/stations/fuel_selection.dart';
 import '../../../core/map/map_config.dart';
 import '../data/models/fuel_station.dart';
 import '../data/services/fuel_station_api.dart';
@@ -40,7 +43,12 @@ class _MapPlaceholder extends StatefulWidget {
 }
 
 class _MapPlaceholderState extends State<_MapPlaceholder> {
-  final _locationService = const LocationService();
+  final _area = SearchAreaController.instance;
+  final _fuelSelection = FuelSelection.instance;
+  bool _locationAllowed = false;
+  int _loadRequest = 0;
+  bool _stationsLoading = false;
+  String? _stationError;
   final _fuelStationApi = const FuelStationApi();
   final _stationDistanceService = const StationDistanceService();
 
@@ -62,37 +70,77 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   double? _currentLatitude;
   double? _currentLongitude;
 
+  @override
+  void initState() {
+    super.initState();
+    _area.addListener(_onAreaChanged);
+    _fuelSelection.addListener(_onFuelChanged);
+    _selectedFuel = _fuelSelection.value;
+    _fuelSelection.initialize();
+  }
+
+  @override
+  void dispose() {
+    _area.removeListener(_onAreaChanged);
+    _fuelSelection.removeListener(_onFuelChanged);
+    super.dispose();
+  }
+
+  void _onFuelChanged() {
+    if (mounted) _changeFuel(_fuelSelection.value);
+  }
+
+  void _onAreaChanged() {
+    if (_mapReady && mounted) _showArea();
+  }
+
   Future<void> _initializeMap() async {
     if (_initialLoadDone || !_mapReady) return;
-
     _initialLoadDone = true;
+    await _area.initialize();
+    if (mounted) await _showArea();
+  }
 
+  Future<void> _showArea() async {
+    final request = ++_loadRequest;
+    final area = _area.area;
+    setState(() {
+      _locationAllowed = area.isDevice;
+      _stationsLoading = true;
+      _stationError = null;
+      _selectedStation = null;
+      _selectedStationDistanceKm = null;
+    });
     try {
-      final position = await _locationService.getCurrentPosition();
-
       await _mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: 14.5,
+            target: LatLng(area.latitude, area.longitude),
+            zoom: 12.5,
           ),
         ),
       );
-
+      if (!mounted || request != _loadRequest) return;
       await _loadFuelStations(
-        latitude: position.latitude,
-        longitude: position.longitude,
+        latitude: area.latitude,
+        longitude: area.longitude,
+        requestId: request,
       );
-    } catch (error) {
-      debugPrint('❌ Surtio: error inicializando mapa: $error');
-
-      _initialLoadDone = false;
-
-      if (!mounted) return;
-
+    } catch (_) {
+      if (!mounted || request != _loadRequest) return;
+      setState(() => _stationError = 'No se pudieron cargar los precios.');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hemos podido obtener tu ubicación.')),
+        SnackBar(
+          content: const Text(
+            'No se pudieron cargar los precios. Comprueba la conexión.',
+          ),
+          action: SnackBarAction(label: 'Reintentar', onPressed: _showArea),
+        ),
       );
+    } finally {
+      if (mounted && request == _loadRequest) {
+        setState(() => _stationsLoading = false);
+      }
     }
   }
 
@@ -143,6 +191,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     setState(() {
       _selectedFuel = fuelType;
     });
+    _fuelSelection.select(fuelType);
 
     final latitude = _currentLatitude;
     final longitude = _currentLongitude;
@@ -164,6 +213,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   Future<void> _loadFuelStations({
     required double latitude,
     required double longitude,
+    required int requestId,
   }) async {
     try {
       final stations = await _fuelStationApi.fetchStations();
@@ -175,7 +225,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         radiusKm: 20,
       );
 
-      if (!mounted) return;
+      if (!mounted || requestId != _loadRequest) return;
 
       setState(() {
         _nearbyStations = nearbyStations;
@@ -213,35 +263,30 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     } catch (error, stackTrace) {
       debugPrint('❌ Surtio: error cargando estaciones: $error');
       debugPrintStack(stackTrace: stackTrace);
+      rethrow;
     }
   }
 
   Future<void> _goToCurrentLocation() async {
     if (_locating) return;
-
     setState(() => _locating = true);
-
     try {
-      final position = await _locationService.getCurrentPosition();
-
-      await _mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: 14.5,
+      await _area.useDeviceLocation();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Ubicación no disponible. Puedes elegir una zona.',
+          ),
+          action: SnackBarAction(
+            label: 'Elegir zona',
+            onPressed: () => pickSearchArea(context),
           ),
         ),
       );
-    } catch (_) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hemos podido obtener tu ubicación.')),
-      );
     } finally {
-      if (mounted) {
-        setState(() => _locating = false);
-      }
+      if (mounted) setState(() => _locating = false);
     }
   }
 
@@ -457,6 +502,29 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
           selectedFuel: _selectedFuel,
           onFuelSelected: _changeFuel,
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Zona: ${_area.area.label}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => pickSearchArea(context),
+                icon: const Icon(Icons.search, size: 18),
+                label: const Text('Cambiar'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -482,7 +550,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                     ),
                     compassEnabled: false,
                     rotateGesturesEnabled: false,
-                    myLocationEnabled: true,
+                    myLocationEnabled: _locationAllowed,
                     myLocationTrackingMode: MyLocationTrackingMode.none,
                     onMapCreated: (controller) {
                       _mapController = controller;
@@ -493,6 +561,50 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                     },
                   ),
                 ),
+                if (_stationsLoading)
+                  const Positioned(
+                    top: 12,
+                    left: 20,
+                    right: 20,
+                    child: LinearProgressIndicator(),
+                  ),
+                if (_mapReady &&
+                    !_stationsLoading &&
+                    (_stationError != null ||
+                        _nearbyStations
+                            .where((s) => s.priceFor(_selectedFuel) != null)
+                            .isEmpty))
+                  Positioned(
+                    top: 12,
+                    left: 16,
+                    right: 16,
+                    child: Material(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _stationError ??
+                                  'No hay precios de este combustible a 20 km de la zona.',
+                            ),
+                            TextButton(
+                              onPressed: _stationError == null
+                                  ? () => pickSearchArea(context)
+                                  : _showArea,
+                              child: Text(
+                                _stationError == null
+                                    ? 'Elegir otra zona'
+                                    : 'Reintentar',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_selectedStation != null &&
                     _selectedStationDistanceKm != null)
                   Positioned(
@@ -761,7 +873,8 @@ class _BestStationCard extends StatelessWidget {
                 child: SizedBox(
                   height: 54,
                   child: FilledButton.icon(
-                    onPressed: () {},
+                    onPressed: () =>
+                        StationActions.navigate(context, fuelStation),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.background,

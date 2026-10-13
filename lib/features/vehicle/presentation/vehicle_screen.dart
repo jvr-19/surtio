@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/stations/fuel_selection.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../data/models/vehicle_profile.dart';
 import '../data/repositories/vehicle_profile_repository.dart';
@@ -29,14 +30,23 @@ class _VehicleScreenState extends State<VehicleScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final profile = await _repository.load();
-    if (!mounted) {
-      return;
+    try {
+      final profile = await _repository.load();
+      if (!mounted) return;
+      setState(() {
+        _profile = profile;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No se pudo cargar el coche.'),
+          action: SnackBarAction(label: 'Reintentar', onPressed: _loadProfile),
+        ),
+      );
     }
-    setState(() {
-      _profile = profile;
-      _loading = false;
-    });
   }
 
   Future<void> _openEditor() async {
@@ -55,6 +65,7 @@ class _VehicleScreenState extends State<VehicleScreen> {
         return;
       }
       setState(() => _profile = updatedProfile);
+      FuelSelection.instance.select(updatedProfile.fuelType);
     } catch (_) {
       if (!mounted) {
         return;
