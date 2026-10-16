@@ -66,7 +66,7 @@ void main() {
       await controller.initialize();
       expect(controller.radiusKm, 20);
       expect(controller.area.isDevice, isFalse);
-      expect(location.calls, 1);
+      expect(location.calls, 0);
       controller.selectRadius(-5);
       expect(controller.radiusKm, 20);
     },
@@ -92,17 +92,26 @@ void main() {
     expect(controller.radiusKm, 10);
   });
 
-  test('denied location leaves an explicit usable manual area', () async {
-    final location = UnavailableLocation();
-    final areas = SearchAreaController(locationService: location);
-    await Future.wait([areas.initialize(), areas.initialize()]);
-    expect(location.calls, 1);
-    expect(areas.area.isDevice, isFalse);
-    expect(areas.area.label, 'Las Palmas de Gran Canaria');
-    areas.select(
-      const SearchArea(latitude: 40.4, longitude: -3.7, label: 'Madrid'),
-    );
-    expect(areas.area.label, 'Madrid');
-    expect(areas.area.latitude, 40.4);
-  });
+  test(
+    'startup does not request location and explicit denial keeps browsing usable',
+    () async {
+      final location = UnavailableLocation();
+      final areas = SearchAreaController(locationService: location);
+      await Future.wait([areas.initialize(), areas.initialize()]);
+      expect(location.calls, 0);
+      expect(areas.area.isDevice, isFalse);
+      expect(areas.area.label, 'Las Palmas de Gran Canaria');
+      await expectLater(
+        areas.useDeviceLocation(),
+        throwsA(isA<PermissionDeniedException>()),
+      );
+      expect(location.calls, 1);
+      expect(areas.area.isDevice, isFalse);
+      areas.select(
+        const SearchArea(latitude: 40.4, longitude: -3.7, label: 'Madrid'),
+      );
+      expect(areas.area.label, 'Madrid');
+      expect(areas.area.latitude, 40.4);
+    },
+  );
 }

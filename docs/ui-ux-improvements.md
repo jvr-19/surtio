@@ -53,3 +53,14 @@ Validación de esta tanda: 32 pruebas correctas y análisis sin incidencias. Rec
 Validación del 16/10/2026: análisis sin incidencias, 41 pruebas automáticas y tres recorridos completos en emulador Android API 36 correctos: recorrido principal, mapa al 200 % y selección real de marcadores con cambio rápido de combustible.
 
 AAB y APK arm64 de 1.0.0+5 generados en dist (fuera de Git), con firmas y sumas SHA-256 verificadas.
+
+
+## Privacidad y seguridad — versión 1.0.0+6
+
+- Inicio sin consultar ubicación; se solicita solo tras pulsar el control. La búsqueda manual sigue disponible.
+- Copias Android y transferencia excluidas; tráfico HTTP bloqueado. Atribución del mapa visible arriba.
+- Privacidad ampliada e idéntica en app y HTML, con identificación del titular particular, terceros, conservación, eliminación, derechos y contacto.
+- Acceso a los ajustes de Android para datos y permisos; errores recuperables. Registros de estaciones cercanas retirados.
+- Controles automáticos de manifiesto, permisos y alineación ELF de 16 KB; política de comunicación de vulnerabilidades.
+- 44 pruebas Flutter y tres pruebas del verificador de manifiesto correctas; análisis sin incidencias. Tres recorridos completos en emulador API 36 correctos.
+- Alcance, fuentes y tareas previas a la publicación documentados en compliance-review.md. No se declara certificación normativa ni aprobación de Google Play.

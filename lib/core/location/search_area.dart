@@ -75,7 +75,6 @@ class SearchAreaController extends ChangeNotifier {
     } catch (_) {
       // Corrupt or unavailable preferences must not block browsing.
     }
-    if (!_chosen) await _locate();
   }
 
   void selectRadius(double radius) {
@@ -111,23 +110,6 @@ class SearchAreaController extends ChangeNotifier {
         // Keep the current selection usable when storage is unavailable.
       }
     });
-  }
-
-  Future<void> _locate() async {
-    try {
-      final position = await _locationService.getCurrentPosition();
-      if (!_chosen) {
-        area = SearchArea(
-          latitude: position.latitude,
-          longitude: position.longitude,
-          label: 'Tu ubicación',
-          isDevice: true,
-        );
-        notifyListeners();
-      }
-    } catch (_) {
-      // Keep the explicitly labelled manual area when location is unavailable.
-    }
   }
 
   void select(SearchArea value) {

@@ -137,3 +137,6 @@ docs/private/
 *.pfx
 *.pem
 *.key
+
+# Python policy-check helpers
+__pycache__/

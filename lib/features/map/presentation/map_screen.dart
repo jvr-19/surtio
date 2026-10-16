@@ -375,26 +375,16 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
       try {
         await _showStationsOnMap(nearbyStations, fuelType: _selectedFuel);
       } catch (error, stackTrace) {
-        debugPrint('❌ ERROR MAPLIBRE: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
-
-      debugPrint('⛽ Surtio: ${stations.length} estaciones nacionales');
-
-      debugPrint(
-        '📍 Surtio: ${nearbyStations.length} estaciones a menos de ${_area.radiusKm.toInt()} km',
-      );
-
-      for (final station in nearbyStations.take(5)) {
-        debugPrint(
-          '⛽ ${station.name} | '
-          '${station.municipality} | '
-          '${station.gasoline95Price ?? '-'} €/L',
-        );
+        if (kDebugMode) {
+          debugPrint('Error al dibujar estaciones: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
       }
     } catch (error, stackTrace) {
-      debugPrint('❌ Surtio: error cargando estaciones: $error');
-      debugPrintStack(stackTrace: stackTrace);
+      if (kDebugMode) {
+        debugPrint('Error al cargar estaciones: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       rethrow;
     }
   }
@@ -621,8 +611,6 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     if (_stationsLayerCreated) {
       await controller.setGeoJsonSource(sourceId, geoJson);
 
-      debugPrint('🔄 Surtio: ${features.length} estaciones actualizadas');
-
       return;
     }
 
@@ -643,8 +631,6 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
     );
 
     _stationsLayerCreated = true;
-
-    debugPrint('🗺️ Surtio: ${features.length} estaciones pintadas');
   }
 
   @override
@@ -742,6 +728,8 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                         ),
                         zoom: MapConfig.initialZoom,
                       ),
+                      attributionButtonPosition:
+                          AttributionButtonPosition.topRight,
                       compassEnabled: false,
                       rotateGesturesEnabled: false,
                       myLocationEnabled: _locationAllowed,

@@ -21,7 +21,7 @@ Con Surtio puedes:
 
 Los precios y horarios proceden de la fuente oficial de carburantes del Gobierno de España. Los precios son informativos y pueden cambiar: confirma el importe antes de repostar. Las distancias son en línea recta. Los periodos largos del histórico utilizan muestras y pueden omitir cambios breves.
 
-Surtio no requiere crear una cuenta.
+Surtio es una aplicación independiente, sin afiliación ni respaldo del Gobierno ni de las estaciones mostradas. No requiere crear una cuenta.
 
 ## Contacto
 support@jvrlabs.es

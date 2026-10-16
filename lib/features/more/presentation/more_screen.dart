@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../../core/legal/privacy_policy.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/stations/station_actions.dart';
@@ -49,7 +51,7 @@ class MoreScreen extends StatelessWidget {
             onTap: () => _showInfo(
               context,
               'Fuentes y precisión',
-              'Los precios y horarios proceden del servicio oficial de precios de carburantes del Gobierno de España. Son informativos y pueden variar: confirma el importe en la estación.\n\nLas distancias son en línea recta, no por carretera. Al elegir un municipio se calculan desde un punto de referencia de la zona.\n\nLos periodos largos del histórico se muestrean y pueden omitir variaciones breves.\n\nMapas: OpenFreeMap y datos de OpenStreetMap. Puedes consultar las atribuciones del proveedor en el mapa.',
+              'Los precios y horarios proceden del servicio oficial de precios de carburantes del Gobierno de España. Surtio es una aplicación independiente, sin afiliación ni respaldo del Gobierno. Son informativos y pueden variar: confirma el importe en la estación.\n\nLas distancias son en línea recta, no por carretera. Al elegir un municipio se calculan desde un punto de referencia de la zona.\n\nLos periodos largos del histórico se muestrean y pueden omitir variaciones breves.\n\nMapas: OpenFreeMap y datos de OpenStreetMap. Puedes consultar las atribuciones del proveedor en el mapa.',
             ),
           ),
         ),
@@ -85,6 +87,31 @@ class MoreScreen extends StatelessWidget {
           ),
         ),
         ListTile(
+          title: const Text('© OpenStreetMap contributors'),
+          subtitle: const Text('Datos del mapa · licencia ODbL'),
+          trailing: const Icon(Icons.open_in_new),
+          onTap: () => StationActions.openUrl(
+            context,
+            Uri.parse('https://www.openstreetmap.org/copyright'),
+          ),
+        ),
+        ListTile(
+          title: const Text('Privacidad de OpenFreeMap'),
+          trailing: const Icon(Icons.open_in_new),
+          onTap: () => StationActions.openUrl(
+            context,
+            Uri.parse('https://openfreemap.org/privacy/'),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings_outlined),
+          title: const Text('Gestionar datos y permisos'),
+          subtitle: const Text(
+            'Abre los ajustes de Android para borrar datos o cambiar permisos',
+          ),
+          onTap: () => _openSettings(context),
+        ),
+        ListTile(
           title: const Text('Licencias de software'),
           onTap: () => showLicensePage(
             context: context,
@@ -95,6 +122,22 @@ class MoreScreen extends StatelessWidget {
       ],
     ),
   );
+
+  static Future<void> _openSettings(BuildContext context) async {
+    try {
+      if (await Geolocator.openAppSettings()) return;
+    } catch (_) {
+      // The OS settings screen may not be available on every platform.
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Abre Ajustes > Aplicaciones > Surtio para gestionar datos y permisos.',
+        ),
+      ),
+    );
+  }
 
   static void _showInfo(BuildContext context, String title, String text) =>
       Navigator.push(
@@ -113,6 +156,5 @@ class MoreScreen extends StatelessWidget {
         ),
       );
 
-  static const privacyText =
-      'Surtio · Información de privacidad\nActualizada el 16 de octubre de 2026\n\nContacto: support@jvrlabs.es\n\nUbicación\nLa app solicita ubicación mientras la utilizas para centrar el mapa y calcular distancias. También puedes elegir una zona sin conceder ese permiso. Surtio no guarda un historial de ubicaciones ni solicita ubicación en segundo plano.\n\nDatos en tu dispositivo\nEl perfil de tu coche, los identificadores de estaciones favoritas, la zona elegida manualmente y el radio de búsqueda se guardan localmente. También se conserva una copia local de los últimos precios públicos consultados, utilizable durante un máximo de 24 horas si falla la actualización. La posición del dispositivo no se guarda. No hay cuentas de usuario ni un servidor propio que reciba estos datos. El sistema operativo puede incluir las preferencias locales en sus copias de seguridad. Puedes borrar los datos desde los ajustes de Android o desinstalar la app.\n\nConexiones a servicios externos\nLa app consulta precios al servicio oficial de carburantes y carga mapas de OpenFreeMap. Las peticiones de red exponen tu dirección IP a sus proveedores; las teselas solicitadas corresponden a la zona visible del mapa. Consulta las políticas de estos servicios para conocer su tratamiento.\n\nNavegación y compartir\nAl abrir una ruta se envían las coordenadas de la estación a Google Maps o al navegador. Al compartir, la aplicación que elijas recibe el texto de la estación y el precio consultado. No se comparte tu perfil del coche.\n\nEsta versión no integra publicidad ni analítica de uso.';
+  static const privacyText = PrivacyPolicy.text;
 }

@@ -61,3 +61,7 @@ Consulta [CONTRIBUTING.md](CONTRIBUTING.md). Para incidencias privadas o dudas: 
 ## Compilación para Google Play
 
 Consulta [la preparación del lanzamiento](docs/launch-readiness.md) y `scripts/build-play-bundle.sh`. Las claves de firma y `android/key.properties` son privados y deben mantenerse fuera de Git. El repositorio no contiene una clave de firma pública de desarrollo para versiones de lanzamiento.
+
+## Privacidad y preparación de publicación
+
+La ubicación solo se solicita al pulsar su control; la búsqueda manual funciona sin permiso. La app incluye privacidad y acceso a ajustes para borrar datos o revocar permisos. Consulta [la revisión de cumplimiento](docs/compliance-review.md) para conocer las medidas verificadas y los asuntos todavía pendientes. No se declara certificación normativa ni aprobación de Google Play.
