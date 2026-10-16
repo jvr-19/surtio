@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 
 class PriceFreshness extends StatelessWidget {
-  const PriceFreshness({super.key, required this.queriedAt});
+  const PriceFreshness({
+    super.key,
+    required this.queriedAt,
+    this.usingSavedPrices = false,
+  });
   final DateTime? queriedAt;
+  final bool usingSavedPrices;
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +17,7 @@ class PriceFreshness extends StatelessWidget {
     return Text(
       time == null
           ? 'Precios oficiales · fecha de consulta no disponible'
-          : 'Consulta: ${two(time.day)}/${two(time.month)} ${two(time.hour)}:${two(time.minute)} · Confirma el precio al repostar.',
+          : '${usingSavedPrices ? "Sin actualizar · Consulta guardada" : "Consulta"}: ${two(time.day)}/${two(time.month)} ${two(time.hour)}:${two(time.minute)} · Confirma el precio al repostar.',
       style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
     );
   }

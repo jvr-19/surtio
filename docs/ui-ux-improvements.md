@@ -39,3 +39,17 @@ Paquete AAB de esta tanda generado y firmado como 1.0.0+3 en la carpeta local di
 El AAB 1.0.0+3 anterior no incorpora esta tanda.
 
 Validación de esta tanda: 32 pruebas correctas y análisis sin incidencias. Recorrido Android con datos reales y prueba adicional del mapa al 200 % completados en emulador API 36. Captura técnica en docs/screenshots/08-map-large-text.png.
+
+
+## Selección y recuperación — versión 1.0.0+5
+
+- Tocar una etiqueta del mapa selecciona la estación; el cambio de combustible conserva la selección si sigue disponible.
+- Copia local de precios públicos con límite de 24 horas, fecha original visible y nuevos intentos de conexión. El fondo del mapa necesita Internet.
+- Actualizar conserva el contenido visible; el detalle y el texto compartido incluyen la fecha de consulta.
+- Precios no válidos excluidos y cambios rápidos de combustible protegidos frente a resultados antiguos.
+- 41 pruebas automáticas correctas, incluyendo archivo local, recuperación de red y errores de compartir/navegación.
+- Solo hay emulador disponible. La revisión hablada con TalkBack y las interfaces externas de navegación/compartir quedan pendientes de comprobación manual.
+
+Validación del 16/10/2026: análisis sin incidencias, 41 pruebas automáticas y tres recorridos completos en emulador Android API 36 correctos: recorrido principal, mapa al 200 % y selección real de marcadores con cambio rápido de combustible.
+
+AAB y APK arm64 de 1.0.0+5 generados en dist (fuera de Git), con firmas y sumas SHA-256 verificadas.

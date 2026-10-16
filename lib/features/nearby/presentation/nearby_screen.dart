@@ -39,6 +39,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
   bool _loading = true;
   String? _error;
   DateTime? _queriedAt;
+  bool _usingSavedPrices = false;
 
   _NearbySort _sort = _NearbySort.distance;
   FuelType _selectedFuel = FuelType.gasoline95;
@@ -113,6 +114,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
 
       setState(() {
         _queriedAt = FuelStationApi.lastUpdated;
+        _usingSavedPrices = FuelStationApi.usingSavedPrices;
         _allStations = result;
         _applyFuelFilter();
         _loading = false;
@@ -255,7 +257,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
   }
 
   Widget _buildContent() {
-    if (_loading) {
+    if (_loading && _allStations.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
@@ -324,6 +326,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          if (_loading)
+            const SliverToBoxAdapter(child: LinearProgressIndicator()),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -349,7 +353,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-              child: PriceFreshness(queriedAt: _queriedAt),
+              child: PriceFreshness(
+                queriedAt: _queriedAt,
+                usingSavedPrices: _usingSavedPrices,
+              ),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -394,6 +401,8 @@ class _NearbyScreenState extends State<NearbyScreen> {
 
                 return _StationCard(
                   item: item,
+                  queriedAt: _queriedAt,
+                  usingSavedPrices: _usingSavedPrices,
                   fuelType: _selectedFuel,
                   isLowestPrice:
                       item.station.priceFor(_selectedFuel) == lowestPrice,
@@ -496,11 +505,15 @@ class _SummaryCard extends StatelessWidget {
 class _StationCard extends StatelessWidget {
   const _StationCard({
     required this.item,
+    this.queriedAt,
+    this.usingSavedPrices = false,
     required this.fuelType,
     required this.isLowestPrice,
   });
 
   final _NearbyStation item;
+  final DateTime? queriedAt;
+  final bool usingSavedPrices;
   final FuelType fuelType;
   final bool isLowestPrice;
 
@@ -527,6 +540,8 @@ class _StationCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => StationDetailScreen(
                 station: item.station,
+                queriedAt: queriedAt,
+                usingSavedPrices: usingSavedPrices,
                 distanceKm: item.distanceKm,
                 initialFuel: fuelType,
               ),

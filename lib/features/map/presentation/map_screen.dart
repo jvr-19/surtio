@@ -1,7 +1,8 @@
-import 'dart:typed_data';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -19,25 +20,31 @@ import '../domain/services/station_distance_service.dart';
 import '../../station/presentation/station_detail_screen.dart';
 
 class MapScreen extends StatelessWidget {
-  const MapScreen({super.key});
+  const MapScreen({super.key, this.onMapCreated});
+  final ValueChanged<MapLibreMapController>? onMapCreated;
 
   @override
   Widget build(BuildContext context) {
-    return const SafeArea(bottom: false, child: _MapContent());
+    return SafeArea(
+      bottom: false,
+      child: _MapContent(onMapCreated: onMapCreated),
+    );
   }
 }
 
 class _MapContent extends StatelessWidget {
-  const _MapContent();
+  const _MapContent({this.onMapCreated});
+  final ValueChanged<MapLibreMapController>? onMapCreated;
 
   @override
   Widget build(BuildContext context) {
-    return const _MapPlaceholder();
+    return _MapPlaceholder(onMapCreated: onMapCreated);
   }
 }
 
 class _MapPlaceholder extends StatefulWidget {
-  const _MapPlaceholder();
+  const _MapPlaceholder({this.onMapCreated});
+  final ValueChanged<MapLibreMapController>? onMapCreated;
 
   @override
   State<_MapPlaceholder> createState() => _MapPlaceholderState();
@@ -58,9 +65,16 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   bool _mapReady = false;
   bool _initialLoadDone = false;
   bool _stationsLayerCreated = false;
+  Future<void> _renderQueue = Future.value();
+  int _renderRevision = 0;
+  final Map<int, PointerDownEvent> _mapPointers = {};
+  bool _multiTouch = false;
+  int _tapRequest = 0;
 
   final Set<String> _registeredMarkerImages = {};
 
+  String? _userSelectedStationId;
+  bool _usingSavedPrices = false;
   FuelStation? _selectedStation;
   double? _selectedStationDistanceKm;
 
@@ -83,9 +97,96 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
   @override
   void dispose() {
+    _renderRevision++;
+    _mapController?.onFeatureTapped.remove(_onStationTapped);
     _area.removeListener(_onAreaChanged);
     _fuelSelection.removeListener(_onFuelChanged);
     super.dispose();
+  }
+
+  void _onStationTapped(
+    math.Point<double> point,
+    LatLng coordinates,
+    String id,
+    String layer,
+    Annotation? annotation,
+  ) {
+    if (layer == 'fuel-stations-markers') _selectStation(id);
+  }
+
+  void _selectStation(String id) {
+    if (!mounted || _stationsLoading) return;
+    final matches = _nearbyStations.where(
+      (station) => station.id == id && station.priceFor(_selectedFuel) != null,
+    );
+    if (matches.isEmpty) return;
+    final station = matches.first;
+    final area = _area.area;
+    setState(() {
+      _userSelectedStationId = station.id;
+      _selectedStation = station;
+      _selectedStationDistanceKm =
+          Geolocator.distanceBetween(
+            area.latitude,
+            area.longitude,
+            station.latitude,
+            station.longitude,
+          ) /
+          1000;
+    });
+  }
+
+  void _mapPointerDown(PointerDownEvent event) {
+    _mapPointers[event.pointer] = event;
+    if (_mapPointers.length > 1) _multiTouch = true;
+  }
+
+  void _mapPointerCancel(PointerCancelEvent event) {
+    _mapPointers.remove(event.pointer);
+    if (_mapPointers.isEmpty) _multiTouch = false;
+  }
+
+  void _mapPointerUp(PointerUpEvent event) {
+    final down = _mapPointers.remove(event.pointer);
+    final tap =
+        down != null &&
+        !_multiTouch &&
+        (down.localPosition - event.localPosition).distance <= 12 &&
+        event.timeStamp - down.timeStamp < const Duration(seconds: 1);
+    if (_mapPointers.isEmpty) _multiTouch = false;
+    if (tap) _selectRenderedStation(event.localPosition);
+  }
+
+  Future<void> _selectRenderedStation(Offset point) async {
+    final controller = _mapController;
+    if (controller == null || _stationsLoading || !_stationsLayerCreated) {
+      return;
+    }
+    final request = ++_tapRequest;
+    final revision = _renderRevision;
+    final scale = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        ? View.of(context).devicePixelRatio
+        : 1.0;
+    try {
+      final features = await controller.queryRenderedFeatures(
+        math.Point(point.dx * scale, point.dy * scale),
+        ['fuel-stations-markers'],
+        null,
+      );
+      if (!mounted ||
+          request != _tapRequest ||
+          revision != _renderRevision ||
+          features.isEmpty) {
+        return;
+      }
+      final feature = features.first;
+      if (feature is Map && feature['properties'] is Map) {
+        final id = (feature['properties'] as Map)['id'];
+        if (id != null) _selectStation(id.toString());
+      }
+    } catch (_) {
+      // A map hit-test failure must leave list navigation available.
+    }
   }
 
   void _onFuelChanged() {
@@ -110,24 +211,29 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
       _locationAllowed = area.isDevice;
       _stationsLoading = true;
       _stationError = null;
-      _selectedStation = null;
-      _selectedStationDistanceKm = null;
+      if (!refresh) {
+        _userSelectedStationId = null;
+        _selectedStation = null;
+        _selectedStationDistanceKm = null;
+      }
     });
     try {
-      await _mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(area.latitude, area.longitude),
-            zoom: _area.radiusKm <= 5
-                ? 13
-                : _area.radiusKm <= 10
-                ? 12.5
-                : _area.radiusKm <= 20
-                ? 11.5
-                : 10.5,
+      if (!refresh) {
+        await _mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(area.latitude, area.longitude),
+              zoom: _area.radiusKm <= 5
+                  ? 13
+                  : _area.radiusKm <= 10
+                  ? 12.5
+                  : _area.radiusKm <= 20
+                  ? 11.5
+                  : 10.5,
+            ),
           ),
-        ),
-      );
+        );
+      }
       if (!mounted || request != _loadRequest) return;
       await _loadFuelStations(
         latitude: area.latitude,
@@ -177,7 +283,10 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
       (a, b) => a.priceFor(fuelType)!.compareTo(b.priceFor(fuelType)!),
     );
 
-    final selected = stationsWithPrice.first;
+    final chosen = stationsWithPrice.where(
+      (s) => s.id == _userSelectedStationId,
+    );
+    final selected = chosen.isEmpty ? stationsWithPrice.first : chosen.first;
 
     final distanceMeters = Geolocator.distanceBetween(
       latitude,
@@ -216,7 +325,16 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
       fuelType: fuelType,
     );
 
-    await _showStationsOnMap(_nearbyStations, fuelType: fuelType);
+    try {
+      await _showStationsOnMap(_nearbyStations, fuelType: fuelType);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _stationError =
+              'No se pudo actualizar el mapa. Puedes consultar Cerca.',
+        );
+      }
+    }
   }
 
   Future<void> _loadFuelStations({
@@ -241,6 +359,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
       setState(() {
         _queriedAt = FuelStationApi.lastUpdated;
+        _usingSavedPrices = FuelStationApi.usingSavedPrices;
         _nearbyStations = nearbyStations;
         _currentLatitude = latitude;
         _currentLongitude = longitude;
@@ -429,6 +548,7 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
         fuelType.markerLabel,
       );
 
+      if (!mounted) return null;
       await controller.addImage(markerId, markerImage);
 
       _registeredMarkerImages.add(markerId);
@@ -440,7 +560,21 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
   Future<void> _showStationsOnMap(
     List<FuelStation> stations, {
     required FuelType fuelType,
+  }) {
+    final revision = ++_renderRevision;
+    final next = _renderQueue.then(
+      (_) => _renderStations(stations, fuelType: fuelType, revision: revision),
+    );
+    _renderQueue = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> _renderStations(
+    List<FuelStation> stations, {
+    required FuelType fuelType,
+    required int revision,
   }) async {
+    if (!mounted || revision != _renderRevision) return;
     final controller = _mapController;
 
     if (controller == null) {
@@ -461,12 +595,14 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 
       final markerImage = await _ensureMarkerImage(controller, price, fuelType);
 
+      if (!mounted || revision != _renderRevision) return;
       if (markerImage == null) {
         continue;
       }
 
       features.add({
         'type': 'Feature',
+        'id': station.id,
         'properties': {
           'id': station.id,
           'name': station.name,
@@ -563,7 +699,12 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
           child: Row(
             children: [
-              Expanded(child: PriceFreshness(queriedAt: _queriedAt)),
+              Expanded(
+                child: PriceFreshness(
+                  queriedAt: _queriedAt,
+                  usingSavedPrices: _usingSavedPrices,
+                ),
+              ),
               IconButton(
                 tooltip: 'Actualizar precios',
                 onPressed: _stationsLoading
@@ -588,26 +729,33 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: MapLibreMap(
-                    styleString: MapConfig.styleUrl,
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(
-                        MapConfig.initialLatitude,
-                        MapConfig.initialLongitude,
+                  child: Listener(
+                    onPointerDown: _mapPointerDown,
+                    onPointerUp: _mapPointerUp,
+                    onPointerCancel: _mapPointerCancel,
+                    child: MapLibreMap(
+                      styleString: MapConfig.styleUrl,
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(
+                          MapConfig.initialLatitude,
+                          MapConfig.initialLongitude,
+                        ),
+                        zoom: MapConfig.initialZoom,
                       ),
-                      zoom: MapConfig.initialZoom,
+                      compassEnabled: false,
+                      rotateGesturesEnabled: false,
+                      myLocationEnabled: _locationAllowed,
+                      myLocationTrackingMode: MyLocationTrackingMode.none,
+                      onMapCreated: (controller) {
+                        _mapController = controller;
+                        controller.onFeatureTapped.add(_onStationTapped);
+                        widget.onMapCreated?.call(controller);
+                      },
+                      onStyleLoadedCallback: () {
+                        _mapReady = true;
+                        _initializeMap();
+                      },
                     ),
-                    compassEnabled: false,
-                    rotateGesturesEnabled: false,
-                    myLocationEnabled: _locationAllowed,
-                    myLocationTrackingMode: MyLocationTrackingMode.none,
-                    onMapCreated: (controller) {
-                      _mapController = controller;
-                    },
-                    onStyleLoadedCallback: () {
-                      _mapReady = true;
-                      _initializeMap();
-                    },
                   ),
                 ),
                 if (_stationsLoading)
@@ -666,6 +814,14 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
                       ),
                       child: SingleChildScrollView(
                         child: _BestStationCard(
+                          isLowestPrice: !_nearbyStations.any(
+                            (s) =>
+                                s.priceFor(_selectedFuel) != null &&
+                                s.priceFor(_selectedFuel)! <
+                                    _selectedStation!.priceFor(_selectedFuel)!,
+                          ),
+                          queriedAt: _queriedAt,
+                          usingSavedPrices: _usingSavedPrices,
                           fuelStation: _selectedStation!,
                           distanceKm: _selectedStationDistanceKm!,
                           station: _selectedStation!.name,
@@ -695,6 +851,9 @@ class _MapPlaceholderState extends State<_MapPlaceholder> {
 class _BestStationCard extends StatelessWidget {
   const _BestStationCard({
     required this.fuelStation,
+    this.queriedAt,
+    this.usingSavedPrices = false,
+    required this.isLowestPrice,
     required this.distanceKm,
     required this.station,
     required this.address,
@@ -704,7 +863,10 @@ class _BestStationCard extends StatelessWidget {
     required this.fuelType,
   });
 
+  final bool isLowestPrice;
   final FuelStation fuelStation;
+  final DateTime? queriedAt;
+  final bool usingSavedPrices;
   final double distanceKm;
   final String station;
   final String address;
@@ -748,7 +910,7 @@ class _BestStationCard extends StatelessWidget {
                     color: const Color(0x26FFE600),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
@@ -759,7 +921,9 @@ class _BestStationCard extends StatelessWidget {
                       SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'Más barata en la zona',
+                          isLowestPrice
+                              ? 'Más barata en la zona'
+                              : 'Estación seleccionada',
                           style: TextStyle(
                             color: Color(0xFFFFE600),
                             fontSize: 12,
@@ -907,6 +1071,8 @@ class _BestStationCard extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (_) => StationDetailScreen(
                             station: fuelStation,
+                            queriedAt: queriedAt,
+                            usingSavedPrices: usingSavedPrices,
                             distanceKm: distanceKm,
                             initialFuel: fuelType,
                           ),

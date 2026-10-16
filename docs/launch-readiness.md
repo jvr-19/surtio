@@ -1,6 +1,6 @@
 # Preparación de Surtio para Android
 
-Estado a 13/10/2026: beta en desarrollo; todavía no hay versión publicada en Google Play.
+Estado a 16/10/2026: beta en desarrollo; todavía no hay versión publicada en Google Play.
 
 ## Comportamiento disponible
 
@@ -9,7 +9,7 @@ Mapa, precios oficiales, filtros de combustible, búsqueda por nombre o direcci�
 ## Validación local
 
 - Flutter 3.41.7, Dart 3.11.5; Android SDK 36.
-- Formato correcto, análisis sin incidencias y 32 pruebas correctas.
+- Formato correcto, análisis sin incidencias y 41 pruebas correctas.
 - Recorrido en emulador Android API 36 con datos reales: lista, detalle, favoritos, privacidad y municipio manual.
 - Pruebas de navegación externa a nivel de URI y contenido; pendiente verificación completa en teléfono físico.
 - Bibliotecas nativas de 64 bits inspeccionadas con alineación ELF de al menos 16 KB; pendiente dispositivo con páginas de 16 KB.
@@ -18,7 +18,7 @@ Mapa, precios oficiales, filtros de combustible, búsqueda por nombre o direcci�
 
 1. Publicar y verificar la URL HTTPS de privacidad.
 2. Completar ficha, audiencia, clasificación y Seguridad de los datos según app y proveedores reales.
-3. AAB 1.0.0+3 generado localmente y firma verificada; validar su instalación mediante Google Play antes de distribuir.
+3. AAB y APK 1.0.0+5 generados localmente con firma y sumas SHA-256 verificadas; validar su instalación mediante Google Play antes de distribuir.
 4. Configurar el canal de prueba y recoger comentarios reales.
 5. Cumplir los requisitos de acceso a producción que indique Play Console.
 

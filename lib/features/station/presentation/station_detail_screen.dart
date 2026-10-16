@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../shared/widgets/price_freshness.dart';
 import '../../../core/stations/station_actions.dart';
 import '../../../core/stations/favorite_stations.dart';
 import '../../map/data/models/fuel_station.dart';
@@ -14,11 +15,15 @@ class StationDetailScreen extends StatefulWidget {
     required this.station,
     required this.distanceKm,
     this.initialFuel = FuelType.gasoline95,
+    this.queriedAt,
+    this.usingSavedPrices = false,
   });
 
   final FuelStation station;
   final double? distanceKm;
   final FuelType initialFuel;
+  final DateTime? queriedAt;
+  final bool usingSavedPrices;
 
   @override
   State<StationDetailScreen> createState() => _StationDetailScreenState();
@@ -151,8 +156,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 onBack: () => Navigator.of(context).pop(),
                 isFavorite: _favorites.contains(station.id),
                 onFavorite: _toggleFavorite,
-                onShare: () =>
-                    StationActions.share(context, station, _selectedFuel),
+                onShare: () => StationActions.share(
+                  context,
+                  station,
+                  _selectedFuel,
+                  queriedAt: widget.queriedAt,
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -184,6 +193,11 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 
               const SizedBox(height: 18),
 
+              PriceFreshness(
+                queriedAt: widget.queriedAt,
+                usingSavedPrices: widget.usingSavedPrices,
+              ),
+              const SizedBox(height: 8),
               _PrimaryButton(
                 label: 'Ir ahora',
                 icon: Icons.navigation_rounded,
@@ -196,8 +210,12 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                 isFavorite: _favorites.contains(station.id),
                 saving: _savingFavorite,
                 onFavorite: _toggleFavorite,
-                onShare: () =>
-                    StationActions.share(context, station, _selectedFuel),
+                onShare: () => StationActions.share(
+                  context,
+                  station,
+                  _selectedFuel,
+                  queriedAt: widget.queriedAt,
+                ),
                 onRoute: () => StationActions.navigate(context, station),
               ),
               const SizedBox(height: 12),

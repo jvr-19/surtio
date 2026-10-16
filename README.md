@@ -30,7 +30,7 @@ flutter pub get
 flutter run
 ```
 
-La conexión a Internet es necesaria para consultar los datos y cargar el mapa. La ubicación es opcional. Android es la plataforma de lanzamiento prioritaria; las demás plataformas no tienen validación equivalente.
+La conexión a Internet permite actualizar los precios y cargar el mapa. Si falla la actualización, se pueden consultar los últimos precios guardados durante un máximo de 24 horas, indicando su fecha original. El fondo del mapa necesita conexión. Toca una etiqueta de precio para seleccionar su estación. La ubicación es opcional. Android es la plataforma de lanzamiento prioritaria; las demás plataformas no tienen validación equivalente.
 
 ## Comprobar cambios
 

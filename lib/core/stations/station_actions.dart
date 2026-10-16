@@ -12,7 +12,11 @@ abstract final class StationActions {
         'travelmode': 'driving',
       });
 
-  static String shareText(FuelStation station, FuelType fuel) {
+  static String shareText(
+    FuelStation station,
+    FuelType fuel, {
+    DateTime? queriedAt,
+  }) {
     final price = station.priceFor(fuel);
     final priceText = price == null
         ? ''
@@ -21,7 +25,12 @@ abstract final class StationActions {
       'api': '1',
       'query': '${station.latitude},${station.longitude}',
     });
-    return '${station.name}\n${station.address}, ${station.municipality}$priceText\nPrecio consultado en Surtio; puede cambiar.\n$map';
+    final time = queriedAt?.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final stamp = time == null
+        ? ''
+        : '\nConsulta: ${two(time.day)}/${two(time.month)}/${time.year} ${two(time.hour)}:${two(time.minute)}';
+    return '${station.name}\n${station.address}, ${station.municipality}$priceText$stamp\nPrecio consultado en Surtio; puede cambiar.\n$map';
   }
 
   static Future<void> openUrl(BuildContext context, Uri uri) async {
@@ -47,13 +56,14 @@ abstract final class StationActions {
   static Future<void> share(
     BuildContext context,
     FuelStation station,
-    FuelType fuel,
-  ) async {
+    FuelType fuel, {
+    DateTime? queriedAt,
+  }) async {
     try {
       final box = context.findRenderObject() as RenderBox?;
       await SharePlus.instance.share(
         ShareParams(
-          text: shareText(station, fuel),
+          text: shareText(station, fuel, queriedAt: queriedAt),
           subject: 'Gasolinera en Surtio',
           sharePositionOrigin: box == null
               ? null

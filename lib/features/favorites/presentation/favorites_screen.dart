@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/stations/favorite_stations.dart';
+import '../../../shared/widgets/price_freshness.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../../map/data/services/fuel_station_api.dart';
 import '../../station/presentation/station_detail_screen.dart';
@@ -14,6 +15,8 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final _favorites = FavoriteStations.instance;
   late Future<List<FuelStation>> _stations;
+  DateTime? _queriedAt;
+  bool _usingSavedPrices = false;
   @override
   void initState() {
     super.initState();
@@ -23,7 +26,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Future<List<FuelStation>> _load({bool refresh = false}) async {
     await _favorites.load();
     if (_favorites.ids.isEmpty) return [];
-    return const FuelStationApi().fetchStations(forceRefresh: refresh);
+    final stations = await const FuelStationApi().fetchStations(
+      forceRefresh: refresh,
+    );
+    _queriedAt = FuelStationApi.lastUpdated;
+    _usingSavedPrices = FuelStationApi.usingSavedPrices;
+    return stations;
   }
 
   Future<void> _refresh() async {
@@ -87,9 +95,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               children: [
-                const Text(
-                  'Precios de la última consulta oficial. Desliza para actualizar.',
+                PriceFreshness(
+                  queriedAt: _queriedAt,
+                  usingSavedPrices: _usingSavedPrices,
                 ),
+                const Text('Desliza para actualizar los precios.'),
                 const SizedBox(height: 12),
                 for (final station in stations)
                   Card(
@@ -105,6 +115,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         MaterialPageRoute(
                           builder: (_) => StationDetailScreen(
                             station: station,
+                            queriedAt: _queriedAt,
+                            usingSavedPrices: _usingSavedPrices,
                             distanceKm: null,
                           ),
                         ),

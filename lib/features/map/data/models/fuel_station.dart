@@ -43,11 +43,11 @@ class FuelStation {
       latitude: _parseDouble(json['Latitud']) ?? 0,
       longitude: _parseDouble(json['Longitud (WGS84)']) ?? 0,
       schedule: json['Horario']?.toString().trim() ?? '',
-      gasoline95Price: _parseDouble(json['Precio Gasolina 95 E5']),
-      gasoline98Price: _parseDouble(json['Precio Gasolina 98 E5']),
-      dieselPrice: _parseDouble(json['Precio Gasoleo A']),
-      premiumDieselPrice: _parseDouble(json['Precio Gasoleo Premium']),
-      lpgPrice: _parseDouble(json['Precio Gases licuados del petróleo']),
+      gasoline95Price: _parsePrice(json['Precio Gasolina 95 E5']),
+      gasoline98Price: _parsePrice(json['Precio Gasolina 98 E5']),
+      dieselPrice: _parsePrice(json['Precio Gasoleo A']),
+      premiumDieselPrice: _parsePrice(json['Precio Gasoleo Premium']),
+      lpgPrice: _parsePrice(json['Precio Gases licuados del petróleo']),
     );
   }
 
@@ -59,6 +59,11 @@ class FuelStation {
     if (text.isEmpty) return null;
 
     return double.tryParse(text.replaceAll(',', '.'));
+  }
+
+  static double? _parsePrice(dynamic value) {
+    final price = _parseDouble(value);
+    return price != null && price.isFinite && price > 0 ? price : null;
   }
 
   double? priceFor(FuelType fuelType) {
