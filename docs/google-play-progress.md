@@ -36,3 +36,7 @@ En la comprobación del panel constan **0 testers que hayan aceptado participar*
 Google describe el requisito en términos de testers e inscripción continua; no publica en esa guía una obligación expresa de 12 dispositivos físicos distintos. Recomienda diversidad de usuarios y dispositivos y valora participación real. No se garantiza que múltiples cuentas gestionadas por una sola persona sirvan para obtener producción.
 
 Fuente: https://support.google.com/googleplay/android-developer/answer/14151465
+
+## Preparación posterior
+
+El 18/10/2026 se guardó la versión 1.0.0 (6), con su AAB y notas en español, como borrador de prueba interna. No se ha distribuido ni inicia el requisito de prueba cerrada. Se envió una consulta al contacto de privacidad de OpenFreeMap para aclarar inferencia de ubicación, tratamiento y conservación de datos, finalidades y opciones de exclusión/borrado; pendiente de respuesta.

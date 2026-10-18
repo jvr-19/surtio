@@ -138,8 +138,8 @@ class FuelPriceHistoryService {
     }
 
     final today = _dateOnly(_now());
-    final end = today.subtract(const Duration(days: 1));
-    final start = end.subtract(Duration(days: period.days - 1));
+    final end = _shiftDate(today, -1);
+    final start = _shiftDate(end, -(period.days - 1));
     final requestedDates = _anchorDates(start, end, period.anchorStepDays);
     final pointsByDate = <DateTime, FuelPriceHistoryPoint?>{};
 
@@ -239,7 +239,7 @@ class FuelPriceHistoryService {
     for (
       var date = start;
       !date.isAfter(end);
-      date = date.add(Duration(days: stepDays))
+      date = _shiftDate(date, stepDays)
     ) {
       dates.add(date);
     }
@@ -258,7 +258,9 @@ class FuelPriceHistoryService {
     for (var index = 0; index < dates.length - 1; index++) {
       final leftDate = dates[index];
       final rightDate = dates[index + 1];
-      final gap = rightDate.difference(leftDate).inDays;
+      final gap = DateTime.utc(rightDate.year, rightDate.month, rightDate.day)
+          .difference(DateTime.utc(leftDate.year, leftDate.month, leftDate.day))
+          .inDays;
       final left = values[leftDate];
       final right = values[rightDate];
       if (gap <= 1 || left == null || right == null) {
@@ -268,15 +270,16 @@ class FuelPriceHistoryService {
       if (change < 0.0005) {
         continue;
       }
-      candidates.add((
-        date: leftDate.add(Duration(days: gap ~/ 2)),
-        relevance: change,
-      ));
+      candidates.add((date: _shiftDate(leftDate, gap ~/ 2), relevance: change));
     }
 
     candidates.sort((a, b) => b.relevance.compareTo(a.relevance));
     return candidates.map((candidate) => candidate.date).toList();
   }
+
+  // Calendar days can span 23 or 25 hours when daylight saving time changes.
+  static DateTime _shiftDate(DateTime date, int days) =>
+      DateTime(date.year, date.month, date.day + days);
 
   static DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);

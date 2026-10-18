@@ -19,3 +19,7 @@ jobs:
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - run: flutter analyze
       - run: flutter test
+      - name: Check history across daylight saving changes
+        run: |
+          TZ=Europe/Madrid flutter test --no-pub test/features/station/fuel_price_history_service_test.dart
+          TZ=Atlantic/Canary flutter test --no-pub test/features/station/fuel_price_history_service_test.dart

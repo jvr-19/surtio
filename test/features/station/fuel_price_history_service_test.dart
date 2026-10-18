@@ -5,6 +5,35 @@ import 'package:surtio/features/station/data/services/fuel_price_history_service
 void main() {
   setUp(FuelPriceHistoryService.clearMemoryCacheForTesting);
 
+  for (final month in [3, 10]) {
+    test(
+      'requests seven calendar dates across the month $month clock change',
+      () async {
+        final dates = <DateTime>[];
+        final service = FuelPriceHistoryService(
+          dataSource: _FakeHistoryDataSource(
+            price: (date) {
+              dates.add(date);
+              return 1.5;
+            },
+          ),
+          now: () => DateTime(2026, month, 31),
+        );
+        final points = await service.fetchHistory(
+          station: _station,
+          fuelType: FuelType.gasoline95,
+          period: FuelPriceHistoryPeriod.sevenDays,
+        );
+        final expected = List.generate(
+          7,
+          (index) => DateTime(2026, month, 24 + index),
+        );
+        expect(dates, expected);
+        expect(points.map((point) => point.date), expected);
+      },
+    );
+  }
+
   test('reuses past daily values from the session cache', () async {
     final source = _FakeHistoryDataSource();
     final service = FuelPriceHistoryService(
