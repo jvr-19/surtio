@@ -1,34 +1,43 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/stations/favorite_stations.dart';
+import '../../../core/stations/fuel_selection.dart';
 import '../../../shared/widgets/price_freshness.dart';
 import '../../map/data/models/fuel_station.dart';
 import '../../map/data/services/fuel_station_api.dart';
 import '../../station/presentation/station_detail_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({super.key});
+  const FavoritesScreen({
+    super.key,
+    this.api = const FuelStationApi(),
+    this.favorites,
+    this.fuelSelection,
+  });
+  final FuelStationApi api;
+  final FavoriteStations? favorites;
+  final FuelSelection? fuelSelection;
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  final _favorites = FavoriteStations.instance;
+  late final _favorites = widget.favorites ?? FavoriteStations.instance;
+  late final _fuelSelection = widget.fuelSelection ?? FuelSelection.instance;
   late Future<List<FuelStation>> _stations;
   DateTime? _queriedAt;
   bool _usingSavedPrices = false;
   @override
   void initState() {
     super.initState();
+    _fuelSelection.initialize();
     _stations = _load();
   }
 
   Future<List<FuelStation>> _load({bool refresh = false}) async {
     await _favorites.load();
     if (_favorites.ids.isEmpty) return [];
-    final stations = await const FuelStationApi().fetchStations(
-      forceRefresh: refresh,
-    );
+    final stations = await widget.api.fetchStations(forceRefresh: refresh);
     _queriedAt = FuelStationApi.lastUpdated;
     _usingSavedPrices = FuelStationApi.usingSavedPrices;
     return stations;
@@ -44,6 +53,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
+  String _priceLabel(FuelStation station) {
+    final price = station.priceFor(_fuelSelection.value);
+    return price == null
+        ? 'Sin precio disponible para este carburante'
+        : '${price.toStringAsFixed(3).replaceAll('.', ',')} €/L';
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -57,7 +73,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ],
     ),
     body: ListenableBuilder(
-      listenable: _favorites,
+      listenable: Listenable.merge([_favorites, _fuelSelection]),
       builder: (context, _) => FutureBuilder<List<FuelStation>>(
         future: _stations,
         builder: (context, snapshot) {
@@ -95,6 +111,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               children: [
+                DropdownButton<FuelType>(
+                  value: _fuelSelection.value,
+                  isExpanded: true,
+                  items: [
+                    for (final fuel in FuelType.values)
+                      DropdownMenuItem(value: fuel, child: Text(fuel.fullName)),
+                  ],
+                  onChanged: (fuel) {
+                    if (fuel != null) _fuelSelection.select(fuel);
+                  },
+                ),
                 PriceFreshness(
                   queriedAt: _queriedAt,
                   usingSavedPrices: _usingSavedPrices,
@@ -106,15 +133,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     child: ListTile(
                       title: Text(station.name),
                       subtitle: Text(
-                        '${station.address}\n${station.municipality}',
+                        '${station.address}\n${station.municipality}\n${_priceLabel(station)}',
                       ),
-                      isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => StationDetailScreen(
                             station: station,
+                            initialFuel: _fuelSelection.value,
                             queriedAt: _queriedAt,
                             usingSavedPrices: _usingSavedPrices,
                             distanceKm: null,
