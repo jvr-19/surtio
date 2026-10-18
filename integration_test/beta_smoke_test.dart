@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:surtio/app/welcome_gate.dart';
 import 'dart:math' as math;
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,11 +47,18 @@ void main() {
         await favorites.load();
         final initiallySaved = favorites.contains(station.id);
 
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(WelcomeGate.storageKey, false);
         await tester.pumpWidget(const SurtioApp());
+        await waitFor(tester, find.text('Elegir municipio'));
+        await binding.convertFlutterSurfaceToImage();
+        await tester.pump();
+        await binding.takeScreenshot('00-welcome');
+        await tester.tap(find.text('Explorar sin elegir zona'));
         await tester.pump(const Duration(seconds: 2));
+        expect(prefs.getBool(WelcomeGate.storageKey), isTrue);
         await tester.tap(find.text('Cerca').last);
         await waitFor(tester, find.text(station.name).first);
-        await binding.convertFlutterSurfaceToImage();
         await tester.pump();
         await binding.takeScreenshot('01-nearby');
         expect(find.textContaining('Consulta'), findsWidgets);

@@ -77,3 +77,11 @@ AAB y APK arm64 de 1.0.0+5 generados en dist (fuera de Git), con firmas y sumas 
 Estos cambios y los de Favoritos e histórico posteriores al AAB 1.0.0+6 requieren una nueva compilación antes de distribuirlos en Google Play.
 
 Verificación adicional: tres recorridos de integración correctos en emulador Android API 36 con datos reales (principal, mapa al 200 % y selección/cambio de carburante). Capturas renovadas y revisadas para las pantallas Cerca, detalle, Favoritos y privacidad. Las pruebas de integración ejercitan el nuevo menú de radio antes de la búsqueda para evitar la transición del teclado nativo. La revisión hablada con TalkBack y las interfaces de aplicaciones externas siguen pendientes.
+
+## Primer inicio — 18/10/2026
+
+- Bienvenida con elección de municipio, ubicación opcional y entrada sin elegir zona con punto inicial explícito.
+- La app no carga el mapa ni solicita ubicación durante la bienvenida. La elección completada se conserva localmente; los fallos de almacenamiento no impiden continuar en la sesión.
+- Ante permisos denegados, ubicación desactivada o espera agotada, se explica el problema y se mantiene la alternativa por municipio.
+- Interfaz desplazable con texto grande; no se añaden cuentas, anuncios ni analítica.
+- Seis pruebas nuevas de bienvenida; estado y alcance de las pruebas pendientes en testing/verification-status.md.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_shell.dart';
+import 'welcome_gate.dart';
 import 'theme/app_theme.dart';
 
 class SurtioApp extends StatelessWidget {
@@ -12,7 +13,7 @@ class SurtioApp extends StatelessWidget {
       title: 'Surtio',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const AppShell(),
+      home: const WelcomeGate(child: AppShell()),
     );
   }
 }

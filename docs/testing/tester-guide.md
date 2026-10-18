@@ -8,6 +8,8 @@ Permanecer inscrito al menos 14 días consecutivos. Usar la app en varias sesion
 
 ## Recorrido sugerido
 
+En versiones con bienvenida, elegir municipio o ubicación opcional; también se puede explorar sin elegir zona. Cerrar y volver a abrir: la bienvenida no debe repetirse tras completarla. Borrar los datos desde Ajustes debe devolver la app al primer inicio.
+
 1. Elegir un municipio manualmente sin conceder ubicación y comprobar que aparecen precios.
 2. Probar ubicación permitida y denegada, y GPS apagado cuando sea posible.
 3. Comparar combustibles y ordenar por precio/distancia.

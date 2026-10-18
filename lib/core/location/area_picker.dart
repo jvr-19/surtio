@@ -4,9 +4,10 @@ import '../../features/map/data/models/fuel_station.dart';
 import '../../features/map/data/services/fuel_station_api.dart';
 import 'search_area.dart';
 
-Future<void> pickSearchArea(
+Future<bool> pickSearchArea(
   BuildContext context, {
   FuelStationApi api = const FuelStationApi(),
+  SearchAreaController? controller,
 }) async {
   final area = await showModalBottomSheet<SearchArea>(
     context: context,
@@ -14,7 +15,9 @@ Future<void> pickSearchArea(
     useSafeArea: true,
     builder: (_) => _AreaPicker(api: api),
   );
-  if (area != null) SearchAreaController.instance.select(area);
+  if (area == null) return false;
+  (controller ?? SearchAreaController.instance).select(area);
+  return true;
 }
 
 class _AreaPicker extends StatefulWidget {
