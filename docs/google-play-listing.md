@@ -27,9 +27,11 @@ Surtio es una aplicación independiente, sin afiliación ni respaldo del Gobiern
 support@jvrlabs.es
 
 ## Material pendiente antes de publicar
-- URL pública de privacidad pendiente de despliegue: archivo preparado también en la web JVR Labs, public/surtio/privacy.html. Ruta prevista /surtio/privacy.html. Verificar que devuelve HTTP 200 en producción antes de indicarla en Google Play.
+- Privacidad publicada y guardada en Play Console: https://www.jvrlabs.es/surtio/privacy.html (HTTP 200 verificado el 18/10/2026).
 - Material preparado: docs/screenshots/ (capturas Android reales), docs/store-assets/app-icon.png (512 × 512) y docs/store-assets/feature-graphic.png (1024 × 500), con fuentes SVG. Seleccionar las capturas finales antes de publicar.
-- Categoría sugerida: Mapas y navegación.
-- Completar clasificación de contenido y audiencia según el cuestionario real.
+- Categoría guardada: Mapas y navegación.
+- IARC completado: PEGI 3 en Europa. Audiencia guardada: 16–17 y mayores de 18 años.
 - Completar Seguridad de los datos después de revisar el comportamiento de OpenFreeMap y sus subproveedores: la zona visible puede revelarse por las peticiones de teselas. No inferir “no recopila datos” solo porque Surtio no tiene servidor propio.
 - Confirmar si la cuenta dispone de producción o exige prueba cerrada desde Play Console.
+
+Estado comprobado de los formularios: [google-play-progress.md](google-play-progress.md).

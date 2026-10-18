@@ -58,7 +58,7 @@ No se ha completado ni enviado el formulario en esta revisión. Tampoco se han c
 1. URL de privacidad desplegada, pública, sin login y coherente con la app.
 2. Seguridad de los datos y proveedores revisados y declarados; resolver transferencias/condiciones de uso cuando corresponda.
 3. Identificación legal y condición económica del titular evaluadas para la ficha/aviso; publicar datos personales adicionales solo tras revisión del titular.
-4. Revisión de audiencia y condiciones vigentes del proveedor cartográfico; su política menciona un público mayor de edad. No seleccionar audiencia infantil sin resolverlo.
+4. Audiencia revisada el 18/10/2026: 16–17 y mayores de 18 años. Las condiciones de OpenFreeMap aclaran que el requisito de mayoría de edad es para integrar el servicio, no para los usuarios finales de mapas integrados. Reabrir la revisión si se orienta a menores de 16 años.
 5. Reutilización oficial y avisos de licencias nativas verificados.
 6. TalkBack, navegación/compartir externos, permiso aproximado, borrado de almacenamiento y páginas de 16 KB verificados manualmente donde proceda.
 7. Ficha, clasificación, verificación de cuenta, informe previo al lanzamiento y prueba cerrada completados. Solicitud de producción revisada por Google.
@@ -85,3 +85,7 @@ No se ha completado ni enviado el formulario en esta revisión. Tampoco se han c
 ## Resultado de verificación local
 
 44 pruebas Flutter, tres pruebas del verificador de manifiesto y tres recorridos completos en emulador API 36 pasan. Formato y análisis correctos. AAB/APK 1.0.0+6 firmados y comprobados; manifiesto combinado con API objetivo 36, controles de permisos y exclusiones correctos. Segmentos ELF de 64 bits alineados para 16 KB; alineación ZIP del APK verificada con zipalign -P 16. Sumas SHA-256 comprobadas. Esto no equivale a una prueba de ejecución en un dispositivo de 16 KB ni a una aprobación de Play. La identificación legal completa sigue pendiente de autorización de sus datos públicos; no se incorpora a estos textos nuevos.
+
+## Actualización de Play Console — 18/10/2026
+
+Privacidad publicada, clasificación y audiencia guardadas, ficha con recursos preparada. Diez de once tareas completadas; Seguridad de los datos sigue en borrador, pendiente de evidencia suficiente de proveedores. Ver [google-play-progress.md](google-play-progress.md). No hay aprobación ni publicación en producción.
