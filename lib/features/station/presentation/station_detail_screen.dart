@@ -152,22 +152,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _TopBar(
-                onBack: () => Navigator.of(context).pop(),
-                isFavorite: _favorites.contains(station.id),
-                onFavorite: _toggleFavorite,
-                onShare: () => StationActions.share(
-                  context,
-                  station,
-                  _selectedFuel,
-                  queriedAt: widget.queriedAt,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Más adelante aquí irá la foto real de la estación.
-              const _StationHero(),
-
+              _TopBar(onBack: () => Navigator.of(context).pop()),
               const SizedBox(height: 18),
 
               _StationIdentity(station: station, distanceKm: widget.distanceKm),
@@ -199,7 +184,7 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
               ),
               const SizedBox(height: 8),
               _PrimaryButton(
-                label: 'Ir ahora',
+                label: 'Cómo llegar',
                 icon: Icons.navigation_rounded,
                 onPressed: () => StationActions.navigate(context, station),
               ),
@@ -216,14 +201,8 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                   _selectedFuel,
                   queriedAt: widget.queriedAt,
                 ),
-                onRoute: () => StationActions.navigate(context, station),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Precios informativos de la fuente oficial. Confirma el precio en la estación.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-
               if (station.schedule.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 _ScheduleSection(schedule: station.schedule),
@@ -257,44 +236,26 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.onBack,
-    required this.isFavorite,
-    required this.onFavorite,
-    required this.onShare,
-  });
-
+  const _TopBar({required this.onBack});
   final VoidCallback onBack;
-  final bool isFavorite;
-  final VoidCallback onFavorite;
-  final VoidCallback onShare;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _TopButton(
-          icon: Icons.arrow_back_ios_new_rounded,
-          onTap: onBack,
-          label: 'Volver',
+  Widget build(BuildContext context) => Row(
+    children: [
+      _TopButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        onTap: onBack,
+        label: 'Volver',
+      ),
+      const SizedBox(width: 8),
+      const Expanded(
+        child: Text(
+          'Detalle de estación',
+          style: TextStyle(color: AppColors.textSecondary),
         ),
-        const Spacer(),
-        _TopButton(
-          icon: isFavorite
-              ? Icons.favorite_rounded
-              : Icons.favorite_border_rounded,
-          onTap: onFavorite,
-          label: isFavorite ? 'Quitar favorito' : 'Guardar favorito',
-        ),
-        const SizedBox(width: 10),
-        _TopButton(
-          icon: Icons.ios_share_rounded,
-          onTap: onShare,
-          label: 'Compartir estación',
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 }
 
 class _TopButton extends StatelessWidget {
@@ -315,58 +276,6 @@ class _TopButton extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(icon, color: AppColors.textPrimary, size: 23),
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-    );
-  }
-}
-
-class _StationHero extends StatelessWidget {
-  const _StationHero();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 175,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0D2A36), Color(0xFF071820)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            bottom: -42,
-            child: Icon(
-              Icons.local_gas_station_rounded,
-              size: 220,
-              color: AppColors.primary.withValues(alpha: 0.045),
-            ),
-          ),
-          Center(
-            child: Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                ),
-              ),
-              child: const Icon(
-                Icons.local_gas_station_rounded,
-                color: AppColors.primary,
-                size: 39,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -571,8 +480,8 @@ class _PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
@@ -587,9 +496,15 @@ class _PrimaryButton extends StatelessWidget {
           children: [
             Icon(icon, size: 21),
             const SizedBox(width: 9),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ],
         ),
@@ -604,13 +519,11 @@ class _ActionButtons extends StatelessWidget {
     required this.saving,
     required this.onFavorite,
     required this.onShare,
-    required this.onRoute,
   });
   final bool isFavorite;
   final bool saving;
   final VoidCallback onFavorite;
   final VoidCallback onShare;
-  final VoidCallback onRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -635,14 +548,6 @@ class _ActionButtons extends StatelessWidget {
             icon: Icons.share_rounded,
             label: 'Compartir',
             onTap: onShare,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            icon: Icons.route_rounded,
-            label: 'Ruta',
-            onTap: onRoute,
           ),
         ),
       ],

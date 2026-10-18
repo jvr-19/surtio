@@ -211,7 +211,7 @@ class _NearbyScreenState extends State<NearbyScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
           if (View.of(context).viewInsets.bottom == 0)
             _FuelSelector(selectedFuel: _selectedFuel, onSelected: _changeFuel),
           Padding(
@@ -230,24 +230,34 @@ class _NearbyScreenState extends State<NearbyScreen> {
           ),
           if (View.of(context).viewInsets.bottom == 0)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const Text('Radio de búsqueda'),
-                  for (final radius in SearchAreaController.radiusOptions)
-                    ChoiceChip(
-                      label: Text('${radius.toInt()} km'),
-                      selected: _radiusKm == radius,
-                      onSelected: _loading
-                          ? null
-                          : (selected) {
-                              if (!selected) return;
-                              _area.selectRadius(radius);
-                            },
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: PopupMenuButton<double>(
+                  tooltip: 'Cambiar radio de búsqueda',
+                  initialValue: _radiusKm,
+                  enabled: !_loading,
+                  onSelected: _area.selectRadius,
+                  itemBuilder: (_) => [
+                    for (final radius in SearchAreaController.radiusOptions)
+                      CheckedPopupMenuItem(
+                        value: radius,
+                        checked: radius == _radiusKm,
+                        child: Text('${radius.toInt()} km'),
+                      ),
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Radio: ${_radiusKm.toInt()} km'),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.expand_more),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             ),
           Expanded(child: _buildContent()),

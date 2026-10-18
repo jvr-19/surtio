@@ -64,3 +64,16 @@ AAB y APK arm64 de 1.0.0+5 generados en dist (fuera de Git), con firmas y sumas 
 - Controles automáticos de manifiesto, permisos y alineación ELF de 16 KB; política de comunicación de vulnerabilidades.
 - 44 pruebas Flutter y tres pruebas del verificador de manifiesto correctas; análisis sin incidencias. Tres recorridos completos en emulador API 36 correctos.
 - Alcance, fuentes y tareas previas a la publicación documentados en compliance-review.md. No se declara certificación normativa ni aprobación de Google Play.
+
+## Menos pasos y más contenido visible — 18/10/2026
+
+- Cerca conserva visible el radio elegido y permite cambiarlo desde un menú con la opción actual marcada. Evita que las cuatro opciones ocupen varias filas antes de los resultados.
+- Menos espacio entre la zona y los carburantes, conservando la búsqueda, el orden y la fecha de consulta.
+- Detalle sin ilustración decorativa de gran tamaño. La identidad, los precios y la acción principal aparecen antes.
+- Una sola acción «Cómo llegar» y una sola pareja de acciones para guardar/compartir, sin duplicarlas en la cabecera.
+- Botón principal adaptable a texto grande, con etiqueta que puede ocupar más de una línea.
+- Pruebas de búsqueda/radio actualizadas; 49 pruebas Flutter correctas y análisis sin incidencias.
+
+Estos cambios y los de Favoritos e histórico posteriores al AAB 1.0.0+6 requieren una nueva compilación antes de distribuirlos en Google Play.
+
+Verificación adicional: tres recorridos de integración correctos en emulador Android API 36 con datos reales (principal, mapa al 200 % y selección/cambio de carburante). Capturas renovadas y revisadas para las pantallas Cerca, detalle, Favoritos y privacidad. Las pruebas de integración ejercitan el nuevo menú de radio antes de la búsqueda para evitar la transición del teclado nativo. La revisión hablada con TalkBack y las interfaces de aplicaciones externas siguen pendientes.

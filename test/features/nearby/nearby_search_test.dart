@@ -67,7 +67,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('ESTACION CERCANA'), findsOneWidget);
     expect(find.text('ESTACION LEJANA'), findsNothing);
-    await tester.tap(find.widgetWithText(ChoiceChip, '50 km'));
+    await tester.tap(find.text('Radio: 20 km'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('50 km'));
     await tester.pumpAndSettle();
     expect(find.text('2 estaciones'), findsOneWidget);
     await tester.enterText(find.byType(TextField), '  carretera  ');

@@ -53,11 +53,9 @@ void main() {
         await tester.pump();
         await binding.takeScreenshot('01-nearby');
         expect(find.textContaining('Consulta'), findsWidgets);
-        await tester.enterText(find.byType(TextField), station.name);
-        await tester.pump(const Duration(milliseconds: 500));
-        expect(find.text(station.name), findsWidgets);
-        await tester.enterText(find.byType(TextField), '');
-        await tester.tap(find.widgetWithText(ChoiceChip, '50 km'));
+        await tester.tap(find.text('Radio: 20 km'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('50 km'));
         await tester.pump(const Duration(seconds: 1));
         await tester.tap(find.text('Mapa').last);
         await tester.pump(const Duration(seconds: 2));
@@ -71,12 +69,19 @@ void main() {
         await binding.takeScreenshot('07-map');
         await tester.tap(find.text('Cerca').last);
         await tester.pump(const Duration(milliseconds: 500));
-        await tester.tap(find.widgetWithText(ChoiceChip, '20 km'));
+        await tester.tap(find.text('Radio: 50 km'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('20 km'));
         await waitFor(tester, find.text(station.name).first);
 
+        await tester.enterText(find.byType(TextField), station.name);
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.text(station.name), findsWidgets);
+        await tester.enterText(find.byType(TextField), '');
+        await tester.pump(const Duration(milliseconds: 500));
         await tester.tap(find.text(station.name).first);
         await tester.pump(const Duration(seconds: 2));
-        expect(find.text('Ir ahora'), findsOneWidget);
+        expect(find.text('Cómo llegar'), findsOneWidget);
         if (!initiallySaved) {
           await tester.tap(find.text('Guardar'));
           await waitFor(tester, find.text('Guardada'));
