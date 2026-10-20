@@ -89,3 +89,7 @@ No se ha completado ni enviado el formulario en esta revisión. Tampoco se han c
 ## Actualización de Play Console — 18/10/2026
 
 Privacidad publicada, clasificación y audiencia guardadas, ficha con recursos preparada. Diez de once tareas completadas; Seguridad de los datos sigue en borrador, pendiente de evidencia suficiente de proveedores. Ver [google-play-progress.md](google-play-progress.md). No hay aprobación ni publicación en producción.
+
+## Actualización de Play Console — 20/10/2026
+
+Seguridad de los datos guardada en Resumen de publicación, sin envío a revisión. Ubicación aproximada/precisa opcional para funcionalidad, recogida y compartida, y cifrado en tránsito. Retirada la categoría provisional de identificadores tras contrastar la definición de Android y la implementación del SDK; no se equipara automáticamente una IP a un identificador derivado de dispositivo. La IP y los registros de proveedor siguen descritos en la política. Evidencias y límites en google-play-progress.md. No se ha enviado la segunda consulta al proveedor. Quedan la compilación actualizada, pruebas y configuración del canal, revisión de Google y demás comprobaciones humanas ya identificadas.

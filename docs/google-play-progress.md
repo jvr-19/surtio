@@ -1,6 +1,6 @@
 # Estado de configuración en Google Play
 
-Comprobado el 18/10/2026 en Play Console: **10 de 11 tareas de configuración de la aplicación completadas**. Completado significa guardado y preparado para revisión; no significa que Google lo haya aprobado ni que la aplicación esté publicada.
+El 18/10/2026 se comprobaron diez de once tareas de configuración completadas. El 20/10/2026 se guardó también Seguridad de los datos en Resumen de publicación, pendiente de envío a revisión. Completado significa guardado y preparado para revisión; no significa que Google lo haya aprobado ni que la aplicación esté publicada.
 
 | Tarea | Estado guardado |
 | --- | --- |
@@ -9,32 +9,33 @@ Comprobado el 18/10/2026 en Play Console: **10 de 11 tareas de configuración de
 | Anuncios | La aplicación no contiene anuncios |
 | Clasificación de contenido | IARC completado; PEGI 3 en Europa |
 | Audiencia objetivo | 16–17 y a partir de 18 años, según indicación del titular |
-| Seguridad de los datos | Borrador incompleto; no enviado como declaración definitiva |
+| Seguridad de los datos | Guardada el 20/10/2026 en Resumen de publicación; no enviada todavía a revisión |
 | Aplicación gubernamental | No; Surtio es independiente de la Administración |
 | Funciones financieras | No ofrece funciones financieras |
 | Salud | No ofrece funciones de salud |
 | Categoría y contacto | Mapas y navegación; support@jvrlabs.es; https://www.jvrlabs.es/ |
 | Ficha de Play Store | Español de España, nombre y descripciones, icono, gráfico destacado y cuatro capturas reales; lista para enviar a revisión |
 
-## Seguridad de los datos pendiente — revisión del 20/10/2026
+## Seguridad de los datos guardada — 20/10/2026
 
-El formulario sigue como borrador incompleto y no se ha enviado como declaración definitiva. Se ha recibido respuesta del proveedor; la correspondencia y sus cabeceras no se publican en el repositorio.
+Play Console confirmó «Cambio guardado. Para enviarlo a revisión, ve a Resumen de publicación». No se ha pulsado el envío a revisión ni publicado una versión.
 
-En el borrador de Play se han completado las preguntas de ubicación aproximada y precisa: recogida y compartición para funcionalidad, opcional y sin afirmar procesamiento exclusivamente temporal. Es una preparación del formulario, no una aprobación de Google. La zona elegida manualmente no equivale por sí sola a ubicación física del usuario; el mapa también permite centrarse en la posición del dispositivo y generar solicitudes relacionadas con ella. Esta distinción debe conservarse al revisar el resultado final.
+La declaración guardada incluye ubicación aproximada y precisa, recogida y compartición para funcionalidad, opcional y sin afirmar procesamiento exclusivamente temporal. La vista previa muestra cifrado en tránsito y la política de privacidad pública. No se declara una insignia de eliminación, auditoría independiente ni cumplimiento de familias.
 
-La categoría «IDs de dispositivo o de otro tipo» está seleccionada para revisión de la IP, pero sus preguntas siguen sin completar. No se han guardado declaraciones definitivas sobre su obligatoriedad, fines o compartición. Que una petición incluya una IP no basta para asignarle automáticamente un tipo de datos: Google exige valorar sus usos concretos.
+Se retiró la categoría provisional «IDs de dispositivo o de otro tipo» tras revisar la guía de Android: recibir una IP en una conexión no equivale automáticamente a obtener un identificador de dispositivo, navegador o app a partir de ella. La búsqueda en código de Surtio y dependencias declaradas no encontró identificadores publicitarios, de instalación ni seguimiento; el adaptador Android de MapLibre GL 0.27.1 devuelve false para getTelemetryEnabled y no activa telemetría con setTelemetryEnabled. Esta conclusión debe reabrirse si cambia el SDK, se añaden identificadores o se acredita un uso distinto de los datos de red.
 
-La política pública de OpenFreeMap contempla registros de errores con IP/URL durante siete días y registros temporales de IP por incidentes de seguridad durante un máximo de treinta días. No se afirma que todos los tratamientos sean efímeros ni que toda conservación termine a los siete días. El papel de Cloudflare como encargado de OpenFreeMap no determina por sí solo la relación de OpenFreeMap con el desarrollador de una app integrada.
+La IP sigue siendo un dato personal relevante para la política de privacidad. No se afirma que no se transmita ni que no pueda aparecer en registros. La política pública de OpenFreeMap contempla IP/URL en errores durante siete días y registros de IP en incidentes de seguridad durante hasta treinta días. No se afirma procesamiento exclusivamente efímero ni conservación universal de siete días. Los permisos opcionales y las solicitudes cartográficas relacionadas con el centrado en el dispositivo justifican mantener ubicación en la declaración; seleccionar un municipio manualmente no equivale por sí solo a comunicar la ubicación física del usuario.
 
-Falta concretar los usos reales de la IP, la posibilidad de excluir su tratamiento y la relación entre el desarrollador y el proveedor para evaluar las excepciones de compartición. Hay una segunda consulta preparada, sin enviar a fecha de esta revisión. La autorización del titular no sustituye la evidencia técnica necesaria para cerrar la declaración.
+No se aplicó una exención general de compartición basada solo en que Cloudflare sea encargado de OpenFreeMap. La respuesta del proveedor y sus cabeceras se mantienen fuera del repositorio público. La segunda consulta preparada no se ha enviado, según indicación del titular.
 
 Fuentes públicas revisadas:
 - https://support.google.com/googleplay/android-developer/answer/10787469
+- https://developer.android.com/privacy-and-security/declare-data-use
 - https://openfreemap.org/privacy/
 - https://www.cloudflare.com/cloudflare-customer-dpa/
 - https://openfreemap.org/tos/
 
-Las condiciones de OpenFreeMap del 14/10/2026 distinguen la edad del integrador (18 o más) de la de los usuarios finales de mapas integrados (cualquier edad). Por ello, la indicación general sobre menores de su política de privacidad no debe interpretarse por sí sola como una prohibición de mostrar el mapa a usuarios de 16–17 años.
+Las condiciones de OpenFreeMap del 14/10/2026 distinguen la edad del integrador (18 o más) de los usuarios finales de mapas integrados (cualquier edad). La audiencia guardada se mantiene en 16–17 y mayores de 18 años.
 
 ## Prueba cerrada y publicación
 
