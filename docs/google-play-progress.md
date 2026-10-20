@@ -48,3 +48,11 @@ Fuente: https://support.google.com/googleplay/android-developer/answer/14151465
 ## Preparación posterior
 
 El 18/10/2026 se guardó la versión 1.0.0 (6), con su AAB y notas en español, como borrador de prueba interna. No se ha distribuido ni inicia el requisito de prueba cerrada. Se envió una consulta al contacto de privacidad de OpenFreeMap para aclarar inferencia de ubicación, tratamiento y conservación de datos, finalidades y opciones de exclusión/borrado; respuesta recibida el 19/10/2026; revisión adicional documentada arriba.
+
+## Beta 1.0.0+7 — 20/10/2026
+
+AAB y APK arm64 generados y firmados, con certificados comparados con la versión anterior, paquete/código de versión comprobados, controles de manifiesto y alineación pasados y sumas SHA-256 registradas fuera de Git. Análisis sin incidencias, 55 pruebas Flutter y tres pruebas del control de manifiesto correctas.
+
+Compilación 7 aceptada por Play, con SDK objetivo 36. El borrador interno sustituye la compilación 6 por la 7; su lista existente no se modifica. El canal cerrado Alpha tiene España, el grupo `surtio-beta-testers@googlegroups.com` y contacto `support@jvrlabs.es`; versión 1.0.0 (7) confirmada y guardada en Resumen de publicación. Play muestra «Ya se puede publicar» para esa versión. Esto no acredita todavía distribución ni aprobación de Google.
+
+Las comprobaciones previas detectaron una declaración adicional de ID de publicidad incompleta: se guardó «No» conforme al manifiesto y a la implementación. Se confirmó el envío de catorce cambios a revisión. Play los agrupa como «Cambios en revisión», con las comprobaciones rápidas todavía en curso: el pase efectivo a revisión queda condicionado a que terminen correctamente. No se afirma aprobación ni disponibilidad de la beta. El grupo contiene un miembro; no equivale a un tester inscrito en Play. No hay doce participantes confirmados ni plazo de catorce días acreditado.
