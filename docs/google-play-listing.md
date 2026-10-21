@@ -7,7 +7,18 @@ Surtio: precios de gasolina
 Compara precios de carburantes, guarda estaciones y encuentra dónde repostar.
 
 ## Descripción completa
-Encuentra dónde repostar comparando los precios oficiales de gasolineras en España.
+Surtio es una aplicación independiente. No representa a ninguna entidad gubernamental ni está afiliada o respaldada por el Gobierno de España.
+
+Encuentra dónde repostar comparando los precios de gasolineras en España.
+
+FUENTES OFICIALES DE LA INFORMACIÓN
+Los datos de estaciones, ubicación, precios actuales e históricos y horarios proceden del servicio público de precios de carburantes del Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO), Gobierno de España.
+
+Información del Ministerio y acceso al Geoportal:
+https://www.miteco.gob.es/es/energia/servicios/consultas-de-carburantes.html
+
+Consulta de estaciones y precios en el Geoportal oficial:
+https://geoportalgasolineras.es/
 
 Con Surtio puedes:
 - Consultar estaciones en el mapa o en una lista.
@@ -19,9 +30,9 @@ Con Surtio puedes:
 - Abrir una ruta y compartir una estación.
 - Guardar el perfil de tu coche en tu dispositivo.
 
-Los precios y horarios proceden de la fuente oficial de carburantes del Gobierno de España. Los precios son informativos y pueden cambiar: confirma el importe antes de repostar. Las distancias son en línea recta. Los periodos largos del histórico utilizan muestras y pueden omitir cambios breves.
+Los precios son informativos y pueden cambiar: confirma el importe antes de repostar. Las distancias son en línea recta. Los periodos largos del histórico utilizan muestras y pueden omitir cambios breves.
 
-Surtio es una aplicación independiente, sin afiliación ni respaldo del Gobierno ni de las estaciones mostradas. No requiere crear una cuenta.
+Surtio tampoco está afiliada ni respaldada por las estaciones mostradas. No requiere crear una cuenta.
 
 ## Contacto
 support@jvrlabs.es
@@ -31,7 +42,7 @@ support@jvrlabs.es
 - Material preparado: docs/screenshots/ (capturas Android reales), docs/store-assets/app-icon.png (512 × 512) y docs/store-assets/feature-graphic.png (1024 × 500), con fuentes SVG. Seleccionar las capturas finales antes de publicar.
 - Categoría guardada: Mapas y navegación.
 - IARC completado: PEGI 3 en Europa. Audiencia guardada: 16–17 y mayores de 18 años.
-- Completar Seguridad de los datos después de revisar el comportamiento de OpenFreeMap y sus subproveedores: la zona visible puede revelarse por las peticiones de teselas. No inferir “no recopila datos” solo porque Surtio no tiene servidor propio.
-- Confirmar si la cuenta dispone de producción o exige prueba cerrada desde Play Console.
+- Seguridad de los datos guardada y enviada: ubicación aproximada y precisa opcionales; ver justificación en google-play-progress.md.
+- Beta cerrada 1.0.0+7 reenviada el 21/10/2026 tras corregir las fuentes en la descripción. Aprobación y requisito de testers pendientes.
 
 Estado comprobado de los formularios: [google-play-progress.md](google-play-progress.md).

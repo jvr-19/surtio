@@ -56,3 +56,16 @@ AAB y APK arm64 generados y firmados, con certificados comparados con la versió
 Compilación 7 aceptada por Play, con SDK objetivo 36. El borrador interno sustituye la compilación 6 por la 7; su lista existente no se modifica. El canal cerrado Alpha tiene España, el grupo `surtio-beta-testers@googlegroups.com` y contacto `support@jvrlabs.es`; versión 1.0.0 (7) confirmada y guardada en Resumen de publicación. Play muestra «Ya se puede publicar» para esa versión. Esto no acredita todavía distribución ni aprobación de Google.
 
 Las comprobaciones previas detectaron una declaración adicional de ID de publicidad incompleta: se guardó «No» conforme al manifiesto y a la implementación. Se confirmó el envío de catorce cambios a revisión. Play los agrupa como «Cambios en revisión», con las comprobaciones rápidas todavía en curso: el pase efectivo a revisión queda condicionado a que terminen correctamente. No se afirma aprobación ni disponibilidad de la beta. El grupo contiene un miembro; no equivale a un tester inscrito en Play. No hay doce participantes confirmados ni plazo de catorce días acreditado.
+
+## Corrección de la ficha rechazada — 21/10/2026
+
+Google rechazó el envío del día 20 por «Missing Source Link for Government Information», dentro de la política de afirmaciones engañosas. El área indicada fue la descripción completa en español: mencionaba la fuente oficial, pero no incluía su URL. El aviso de independencia ya existía.
+
+Se guardó una descripción corregida con enlaces explícitos al Ministerio y al Geoportal, identificando el origen de los datos de estaciones, ubicación, precios actuales e históricos y horarios. El aviso de que Surtio no representa a ninguna entidad gubernamental ni tiene afiliación o respaldo del Gobierno se trasladó al principio. La app ya ofrece un enlace al Geoportal en Más. No se cambió el binario 1.0.0+7 por esta corrección de metadatos.
+
+Se reenviaron los catorce cambios de la beta cerrada con la ficha corregida. El historial registra el envío 2 del 21/10/2026 a las 12:39 (Canarias) como «En revisión». Play mostró «Cambios en revisión», con comprobaciones rápidas todavía en curso. No constituye aprobación ni disponibilidad para testers.
+
+Referencias verificadas:
+- https://support.google.com/googleplay/android-developer/answer/9514050
+- https://www.miteco.gob.es/es/energia/servicios/consultas-de-carburantes.html
+- https://geoportalgasolineras.es/
